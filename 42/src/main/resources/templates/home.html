@@ -9,6 +9,20 @@
     <h1>
         Home
     </h1>
-    <p>Hello, </p>
+    <p>Hello,<span th:text="${login}"></span></p>
+    <form action="/candidature" method="post">
+        <input type="text" name="userId" th:value="${userId}" hidden>
+        <button type="submit">View Candidature</button>
+    </form>
+    <form method="get" action="/certificate">
+        <input type="hidden" name="login" th:value="${login}">
+        <select name="signer_par">
+            <option value="Aucune">Aucune</option>
+            <option value="Directeur">Directeur</option>
+            <option value="Assistant">Assistant</option>
+        </select>
+        <button type="submit">Générer Certificat</button>
+    </form>
+
 </body>
 </html>
