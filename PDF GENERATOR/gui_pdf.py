@@ -16,7 +16,7 @@ class CertificateApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Générateur de PDF")
-        self.root.geometry("400x250")
+        self.root.geometry("400x300")
         self.root.resizable(False, False)
         self.root.configure(bg="#f0f0f0")
         self.center_window()
@@ -25,7 +25,7 @@ class CertificateApp:
     def center_window(self):
         """Center the window on the screen."""
         window_width = 400
-        window_height = 250
+        window_height = 300
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         center_x = int(screen_width / 2 - window_width / 2)
@@ -52,6 +52,16 @@ class CertificateApp:
 
         self.entry_login = tk.Entry(main_frame, font=font_entry, width=20, justify='center')
         self.entry_login.pack(pady=5, ipady=4)
+
+        # Liste déroulante pour choisir la signature
+        label_signature = tk.Label(main_frame, text="Choisir la signature:", font=font_label, bg="#f0f0f0")
+        label_signature.pack(pady=(10, 5))
+
+        self.signature_var = tk.StringVar(value="Directeur")  # Valeur par défaut
+        signature_options = ["Directeur", "Assistant"]
+        signature_menu = tk.OptionMenu(main_frame, self.signature_var, *signature_options)
+        signature_menu.config(font=font_entry, width=15, bg="white")
+        signature_menu.pack(pady=5)
 
         button = tk.Button(
             main_frame,
@@ -127,8 +137,9 @@ class CertificateApp:
             # Update output filename to be unique
             config = CertificateConfig()
             config.output_file = os.path.join(config.output_dir, f"certificat_scolarite_{user_id}_{uuid.uuid4().hex}.pdf")
-
-            # Generate certificate
+            
+            print(f"Genre fetch: {user_data.get("gender")}")
+            # Generate certificate with selected signature
             generate_certificate(
                 nom=info_data.get("last_name", "Inconnu"),
                 prenom=info_data.get("first_name", "Inconnu"),
@@ -138,7 +149,8 @@ class CertificateApp:
                 nationalite=nationalite,
                 zip_code=zip_code,
                 ville=ville,
-                monsieur_madame="Monsieur" if info_data.get("gender") == "male" else "Madame"
+                monsieur_madame="Monsieur" if user_data.get("gender") == "male" else "Madame",
+                signer_par=self.signature_var.get()  
             )
 
             success_msg = f"PDF généré pour l'utilisateur {login}: {config.output_file}"
