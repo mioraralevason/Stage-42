@@ -1,0 +1,51 @@
+# Python-specific ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+*.egg-info/
+*.egg
+
+# Environment variables
+.env
+
+# Generated PDFs and temporary files
+PDF GENERATOR/pdf/
+*.pdf
+*.log
+*.aux
+*.out
+
+# Java/Maven-specific ignores
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+mvnw
+mvnw.cmd
+.mvn/wrapper/
+
+# IDE-specific files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*.swn
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Installation and dependency files
+install_dependance.sh
+INSTALL/
+
+# Miscellaneous
+*.bak
+*.tmp
+*.cache
