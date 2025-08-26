@@ -16,6 +16,9 @@
         <div class="login-box">
            
             <form method="post" action="/auth">
+                <div th:if="${error}">
+                    <p style="color: red;" th:text="${error}"></p>
+                </div>
                  <input type="text" placeholder="Enter your username" name="username" required>
                  <input type="text" placeholder="Enter your password" name="password" required>
                 <button type="submit">SIGN IN</button>
