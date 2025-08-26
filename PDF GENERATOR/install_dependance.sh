@@ -23,6 +23,7 @@ pip install reportlab pillow
 pip install python-dotenv
 sudo apt install python3-tk
 pip install requests
+pip install fastapi uvicorn
 
 # Verify installations
 echo "Verifying installed packages..."
