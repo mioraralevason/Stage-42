@@ -9,6 +9,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import uuid
+from api import get_access_token, get_id_users, get_user, get_user_candidature
+from nationalities import country_to_nationality
 
 class CertificateConfig:
     """Configuration class for certificate settings."""
@@ -74,48 +76,55 @@ class CertificateGenerator:
 
     def draw_page(self, canvas, doc):
         """Draws images on each page."""
-        canvas.drawImage(
-            self.config.logo,
-            2*cm,
-            A4[1] - 4*cm,
-            width=A4[0] - 4*cm,
-            height=4*cm,
-            preserveAspectRatio=True
-        )
-        canvas.drawImage(
-            self.config.tampon,
-            8*cm,
-            6*cm,
-            width=A4[0] - 6.01*cm,
-            height=3.73*cm,
-            preserveAspectRatio=True
-        )
-        if self.signature == "Directeur":
+        try:
             canvas.drawImage(
-                self.config.signature_directeur,
+                self.config.logo,
                 2*cm,
-                6*cm,
-                width=6*cm,
-                height=3*cm,
+                A4[1] - 4*cm,
+                width=A4[0] - 4*cm,
+                height=4*cm,
                 preserveAspectRatio=True
             )
-        else:
             canvas.drawImage(
-                self.config.signature_assistant,
-                2*cm,
+                self.config.tampon,
+                8*cm,
                 6*cm,
-                width=6*cm,
-                height=3*cm,
+                width=A4[0] - 6.01*cm,
+                height=3.73*cm,
                 preserveAspectRatio=True
             )
+            if self.signature == "Directeur":
+                canvas.drawImage(
+                    self.config.signature_directeur,
+                    2*cm,
+                    6*cm,
+                    width=6*cm,
+                    height=3*cm,
+                    preserveAspectRatio=True
+                )
+            elif self.signature == "Assistant":
+                canvas.drawImage(
+                    self.config.signature_assistant,
+                    2*cm,
+                    6*cm,
+                    width=6*cm,
+                    height=3*cm,
+                    preserveAspectRatio=True
+                )
+        except Exception as e:
+            raise Exception(f"Erreur lors du dessin des images: {str(e)}")
 
     def create_content(self, nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame):
         """Creates the content for the certificate."""
         elements = []
         current_date = datetime.now().strftime("%d/%m/%Y")
         current_year = current_date.split("/")[-1]
-        date_obj = datetime.strptime(date_naissance, "%d-%m-%Y")
-        date_naissance = date_obj.strftime("%d/%m/%Y")
+        try:
+            date_obj = datetime.strptime(date_naissance, "%d-%m-%Y")
+            date_naissance = date_obj.strftime("%d/%m/%Y")
+        except ValueError as e:
+            raise Exception(f"Erreur lors du formatage de la date: {str(e)}")
+
         interesse = "l’intéressé" if monsieur_madame == "Monsieur" else "l’intéressée"
         inscrit = "inscrit" if monsieur_madame == "Monsieur" else "inscrite"
 
@@ -152,29 +161,80 @@ class CertificateGenerator:
 
         return elements
 
-    def generate(self, nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur",signer_par="Directeur"):
+    def generate(self, nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur", signer_par="Directeur"):
         """Generates the certificate PDF."""
-        elements = self.create_content(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame)
-        self.signature=signer_par
-        self.doc.build(elements, onFirstPage=self.draw_page, onLaterPages=self.draw_page)
-        print(f"PDF generated: {self.config.output_file}")
+        try:
+            elements = self.create_content(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame)
+            self.signature = signer_par
+            self.doc.build(elements, onFirstPage=self.draw_page, onLaterPages=self.draw_page)
+            print(f"PDF generated: {self.config.output_file}")
+        except Exception as e:
+            raise Exception(f"Erreur lors de la génération du PDF: {str(e)}")
 
-def generate_certificate(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur",signer_par=""):
-    """Main function to generate a school certificate."""
+def generate_certificate(login, signer_par="Directeur"):
+    """Main function to generate a school certificate based on user login."""
     config = CertificateConfig()
-    generator = CertificateGenerator(config)
-    generator.generate(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame,signer_par)
+    # Update output filename to be unique
+    output_file = os.path.join(config.output_dir, f"certificat_scolarite_{login}_{uuid.uuid4().hex}.pdf")
+    config.output_file = output_file
+    
+    try:
+        # Get user ID from login
+        user_id = get_id_users(login)
+        print(f"User ID for login {login}: {user_id}")
+
+        # Fetch user and candidature data
+        token = get_access_token()
+        info_data = get_user(user_id, token)
+        user_data = get_user_candidature(user_id, token)
+        print(f"User data: {info_data}")
+        print(f"Candidature data: {user_data}")
+
+        # Convert birth_date from YYYY-MM-DD to DD-MM-YYYY
+        birth_date = user_data.get("birth_date", None)
+        if not birth_date:
+            warning_msg = f"Aucune date de naissance trouvée pour {login}, utilisation de la date par défaut '2000-01-01'"
+            print(warning_msg)
+            birth_date = "2000-01-01"
+
+        try:
+            date_obj = datetime.strptime(birth_date, "%Y-%m-%d")
+            formatted_birth_date = date_obj.strftime("%d-%m-%Y")
+        except ValueError as e:
+            raise Exception(f"Format de date de naissance invalide: {str(e)}")
+
+        # Handle None values for other fields
+        lieu_naissance = user_data.get("birth_city", "Inconnu") or "Inconnu"
+        adresse = user_data.get("postal_street", "Inconnu") or "Inconnu"
+        zip_code = user_data.get("postal_zip_code", "00000") or "00000"
+        ville = user_data.get("postal_city", "Inconnu") or "Inconnu"
+        nationalite = country_to_nationality.get(user_data.get("country", "Inconnu"), "Inconnue")
+
+        # Generate certificate
+        generator = CertificateGenerator(config)
+        generator.generate(
+            nom=info_data.get("last_name", "Inconnu"),
+            prenom=info_data.get("first_name", "Inconnu"),
+            date_naissance=formatted_birth_date,
+            lieu_naissance=lieu_naissance,
+            adresse=adresse,
+            nationalite=nationalite,
+            zip_code=zip_code,
+            ville=ville,
+            monsieur_madame="Monsieur" if user_data.get("gender") == "male" else "Madame",
+            signer_par=signer_par
+        )
+
+        return output_file  # Return the generated filename
+
+    except Exception as e:
+        print(f"Erreur lors de la génération du certificat pour {login}: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     # Example usage
-    generate_certificate(
-        nom="Doe",
-        prenom="John",
-        date_naissance="15-05-2000",
-        lieu_naissance="Paris",
-        adresse="123 Rue Exemple",
-        nationalite="Française",
-        zip_code="75001",
-        ville="Paris",
-        signer_par="Directeur"
-    )
+    try:
+        output_file = generate_certificate(login="mralevas", signer_par="Directeur")
+        print(f"Certificate generated at: {output_file}")
+    except Exception as e:
+        print(f"Error: {str(e)}")
