@@ -1,0 +1,22 @@
+# Ignorer le dossier d'environnement virtuel
+venv/
+
+# Autres fichiers/dossiers courants à ignorer
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+*.log
+*.bak
+*.swp
+.DS_Store

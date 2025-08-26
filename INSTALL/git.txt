@@ -1,0 +1,15 @@
+#get .deb
+wget https://github.com/shiftkey/desktop/releases/download/release-3.3.3-linux2/GitHubDesktop-linux-amd64-3.3.3-linux2.deb
+
+#verification
+ls -lh GitHubDesktop-linux-amd64-3.3.3-linux2.deb
+
+#depacketage
+sudo dpkg -i GitHubDesktop-linux-amd64-3.3.3-linux2.deb
+
+#installer dependance
+sudo apt-get install -f -y
+
+#lancer
+github-desktop
+

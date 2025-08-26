@@ -1,0 +1,12 @@
+#dependance
+sudo apt update
+sudo apt install snapd -y
+
+#installer
+sudo snap install postman
+
+#lancer
+postman
+
+#mise a jour
+sudo snap refresh postman
