@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 import tkinter as tk
 from tkinter import messagebox
-from datetime import datetime
-import os
-import uuid
-import requests
 import re
 from pdf import generate_certificate, CertificateConfig
-from api import get_access_token, get_user, get_user_candidature, get_id_users
-from nationalities import country_to_nationality
 
 class CertificateApp:
     """GUI application for generating school certificates."""
@@ -84,7 +78,7 @@ class CertificateApp:
         button.bind("<Leave>", lambda e: button.configure(background='#007BFF'))
 
     def fetch_and_generate(self):
-        """Fetch user data from API and generate certificate."""
+        """Fetch user data and generate certificate."""
         login = self.entry_login.get().strip()
         if not login:
             error_msg = "Le login ne peut pas être vide"
@@ -100,58 +94,9 @@ class CertificateApp:
             return
 
         try:
-            # Get user ID from login
-            user_id = get_id_users(login)
-            print(f"User ID for login {login}: {user_id}")
-            
-            # Fetch user and candidature data
-            token = get_access_token()
-            info_data = get_user(user_id, token)
-            user_data = get_user_candidature(user_id, token)
-            print(f"User data: {info_data}")
-            print(f"Candidature data: {user_data}")
-
-            # Convert birth_date from YYYY-MM-DD to DD-MM-YYYY
-            birth_date = user_data.get("birth_date", None)
-            if not birth_date:
-                warning_msg = f"Aucune date de naissance trouvée pour {login}, utilisation de la date par défaut '2000-01-01'"
-                print(warning_msg)
-                birth_date = "2000-01-01"
-            
-            try:
-                date_obj = datetime.strptime(birth_date, "%Y-%m-%d")
-                formatted_birth_date = date_obj.strftime("%d-%m-%Y")
-            except ValueError as e:
-                error_msg = f"Format de date de naissance invalide: {str(e)}"
-                print(f"Erreur: {error_msg}")
-                messagebox.showerror("Erreur", error_msg)
-                return
-
-            # Handle None values for other fields
-            lieu_naissance = user_data.get("birth_city", "Inconnu") or "Inconnu"
-            adresse = user_data.get("postal_street", "Inconnu") or "Inconnu"
-            zip_code = user_data.get("postal_zip_code", "00000") or "00000"
-            ville = user_data.get("postal_city", "Inconnu") or "Inconnu"
-            nationalite = country_to_nationality.get(user_data.get("country", "Inconnu"), "Inconnue")
-
-            # Update output filename to be unique
+            # Generate certificate using login and selected signature
             config = CertificateConfig()
-            config.output_file = os.path.join(config.output_dir, f"certificat_scolarite_{user_id}_{uuid.uuid4().hex}.pdf")
-            
-            print(f"Genre fetch: {user_data.get("gender")}")
-            # Generate certificate with selected signature
-            generate_certificate(
-                nom=info_data.get("last_name", "Inconnu"),
-                prenom=info_data.get("first_name", "Inconnu"),
-                date_naissance=formatted_birth_date,
-                lieu_naissance=lieu_naissance,
-                adresse=adresse,
-                nationalite=nationalite,
-                zip_code=zip_code,
-                ville=ville,
-                monsieur_madame="Monsieur" if user_data.get("gender") == "male" else "Madame",
-                signer_par=self.signature_var.get()  
-            )
+            generate_certificate(login=login, signer_par=self.signature_var.get())
 
             success_msg = f"PDF généré pour l'utilisateur {login}: {config.output_file}"
             print(success_msg)
@@ -159,10 +104,6 @@ class CertificateApp:
 
         except ValueError as e:
             error_msg = f"Login invalide: {str(e)}"
-            print(f"Erreur: {error_msg}")
-            messagebox.showerror("Erreur", error_msg)
-        except requests.RequestException as e:
-            error_msg = f"Erreur API lors de la récupération des données: {str(e)}"
             print(f"Erreur: {error_msg}")
             messagebox.showerror("Erreur", error_msg)
         except Exception as e:
