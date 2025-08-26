@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+    <div class="profile-card">
+        <div class="profile-info">
+            <img src="logo.png" alt="Profile Picture" class="profile-pic">
+            <div class="name-status">
+                <h2>Tiavina Aroniana Ramilisoa</h2>
+                <span class="username">tramitso</span>
+                <span class="status unavailable">unavailable</span>
+            </div>
+        </div>
+        <div class="progress-section">
+            <div class="progress">
+                <span class="progress-number">68%</span>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p>Discovery Piscine - Core Python Programming</p>
+            </div>
+            <div class="stats">
+                <span class="stat-value">Ev.P |</span>
+                <span class="stat-value" ># 0</span>
+            </div>
+        </div>
+    </div>
+    <div class="contact-card">
+        <p><span class="contact-icon">📞</span> <span >0349193685</span></p>
+        <p><span class="contact-icon">📧</span> <span >tramitso@student.42antananarivo.mg</span></p>
+        <p><span class="contact-icon">📍</span> <span >Antananarivo</span></p>
+        <p><span class="contact-icon">📅</span> <span >22/08/2028</span></p>
+        <select class="signer-select">
+            <option value="directeur">Signé par Directeur</option>
+            <option value="assistant">Signé par Assistant</option>
+        </select>
+        <button class="generate-cert">Générer Certificat</button>
+    </div>
+</body>
+</html>
