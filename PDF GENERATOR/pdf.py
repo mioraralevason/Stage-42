@@ -17,6 +17,8 @@ class CertificateConfig:
         load_dotenv()
         self.logo = os.getenv("LOGO", "Inconnu.png")
         self.tampon = os.getenv("TAMPON", "Inconnu.png")
+        self.signature_directeur = os.getenv("SIGNATURE_DIRECTEUR", "Inconnu.png")
+        self.signature_assistant = os.getenv("SIGNATURE_ASSISTANT", "Inconnu.png")
         self.responsable = os.getenv("RESPONSABLE", "Inconnu")
         self.poste = os.getenv("POSTE", "Inconnu")
         self.etablissement = os.getenv("ETABLISSEMENT", "42")
@@ -88,6 +90,24 @@ class CertificateGenerator:
             height=3.73*cm,
             preserveAspectRatio=True
         )
+        if self.signature == "Directeur":
+            canvas.drawImage(
+                self.config.signature_directeur,
+                2*cm,
+                6*cm,
+                width=6*cm,
+                height=3*cm,
+                preserveAspectRatio=True
+            )
+        else:
+            canvas.drawImage(
+                self.config.signature_assistant,
+                2*cm,
+                6*cm,
+                width=6*cm,
+                height=3*cm,
+                preserveAspectRatio=True
+            )
 
     def create_content(self, nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame):
         """Creates the content for the certificate."""
@@ -132,17 +152,18 @@ class CertificateGenerator:
 
         return elements
 
-    def generate(self, nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur"):
+    def generate(self, nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur",signer_par="Directeur"):
         """Generates the certificate PDF."""
         elements = self.create_content(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame)
+        self.signature=signer_par
         self.doc.build(elements, onFirstPage=self.draw_page, onLaterPages=self.draw_page)
         print(f"PDF generated: {self.config.output_file}")
 
-def generate_certificate(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur"):
+def generate_certificate(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame="Monsieur",signer_par=""):
     """Main function to generate a school certificate."""
     config = CertificateConfig()
     generator = CertificateGenerator(config)
-    generator.generate(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame)
+    generator.generate(nom, prenom, date_naissance, lieu_naissance, adresse, nationalite, zip_code, ville, monsieur_madame,signer_par)
 
 if __name__ == "__main__":
     # Example usage
@@ -154,5 +175,6 @@ if __name__ == "__main__":
         adresse="123 Rue Exemple",
         nationalite="Française",
         zip_code="75001",
-        ville="Paris"
+        ville="Paris",
+        signer_par="Directeur"
     )

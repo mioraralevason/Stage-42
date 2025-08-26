@@ -78,11 +78,11 @@ def get_user_candidature(user_id, token):
 
 # Test the endpoints
 if __name__ == "__main__":
-    user_id = "238787"  # The user ID you tested
     # Use the provided token or fetch a new one
     token = get_access_token()
     print("Access token:", token)
-    login = "mralevas"
+    login = "hramaros"
+    user_id = get_id_users(login)
 
     try:
         print("Testing get_id_users function:")

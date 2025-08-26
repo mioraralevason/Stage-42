@@ -35,7 +35,7 @@ deactivate
 
 # Check for image files
 echo "Checking for required image files..."
-for img in "./images/logo.png" "./images/tampon.png"; do
+for img in "./images/logo.png" "./images/tampon.png" "./images/signature_directeur.png" "./images/signature_assistant.png"; do
     if [ -f "$img" ]; then
         echo "Found: $img"
     else
