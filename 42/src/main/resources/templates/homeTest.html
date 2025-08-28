@@ -9,20 +9,22 @@
     <h1>
         Home
     </h1>
-    <p>Hello,<span th:text="${login}"></span></p>
-    <form action="/candidature" method="post">
-        <input type="text" name="userId" th:value="${userId}" hidden>
-        <button type="submit">View Candidature</button>
-    </form>
-    <form method="get" action="/certificate">
-        <input type="hidden" name="login" th:value="${login}">
-        <select name="signer_par">
-            <option value="Aucune">Aucune</option>
-            <option value="Directeur">Directeur</option>
-            <option value="Assistant">Assistant</option>
-        </select>
-        <button type="submit">Générer Certificat</button>
-    </form>
+    <p>Hello,<span th:text="${code}"></span></p>
+    <p>Your state is: <span th:text="${state}"></span></p>
+    <br>
+    <p>Access Token: [[${tokenResponse.accessToken}]]</p>
+    <p>Expires In: [[${tokenResponse.expiresIn}]]</p>
+    <p>Refresh Token: [[${tokenResponse.refreshToken}]]</p>
+    <p>Scope: [[${tokenResponse.scope}]]</p>
 
-</body>
+    <h2>User Information</h2>
+    <p>ID: [[${userResponse.id}]]</p>
+    <p>Email: [[${userResponse.email}]]</p>
+    <p>Login: [[${userResponse.login}]]</p>
+    <p>First Name: [[${userResponse.first_name}]]</p>
+    <p>Last Name: [[${userResponse.last_name}]]</p>
+    <p>Usual Full Name: [[${userResponse.usual_full_name}]]</p>
+    <img th:src="${userResponse.image.link}" alt="User Image"/>
+
+</body> 
 </html>

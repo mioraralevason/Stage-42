@@ -5,40 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" th:href="@{/css/home.css}">
+    <!-- FontAwesome pour la flèche et check -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
     <div class="profile-card">
         <div class="profile-info">
-            <img src="logo.png" alt="Profile Picture" class="profile-pic">
+            <img th:src="${userResponse.image.link}" th:alt="${userResponse.image.link}" class="profile-pic">
             <div class="name-status">
-                <h2 th:text="${user.first_name} + ' ' + ${user.last_name}"></h2>
-                <span class="username" th:text="${user.login}"></span>
+                <h1 th:text="${userResponse.first_name} + ' ' + ${userResponse.last_name}"></h1>
+                <span class="username" th:text="${userResponse.login}"></span>
+                <p>
+                    <i class="fa fa-envelope contact-icon" aria-hidden="true"></i>
+                    <span th:text="${userResponse.email}"></span>
+                </p>
             </div>
         </div>
-        <div class="progress-section">
-            <div class="progress">
-                <span class="progress-number">68%</span>
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-                <p>Discovery Piscine - Core Python Programming</p>
-            </div>
-            <div class="stats">
-                <span class="stat-value">Ev.P |</span>
-                <span class="stat-value" ># 0</span>
-            </div>
+
+        <div class="logo-section">
+            <img th:src="@{/images/logo-42.png}" alt="Logo" class="logo-img">
         </div>
     </div>
+
     <div class="contact-card">
-        <p><span class="contact-icon">📞</span> <span >0349193685</span></p>
-        <p><span class="contact-icon">📧</span> <span th:text="${user.email}"></span></p>
-        <p><span class="contact-icon">📍</span> <span >Antananarivo</span></p>
-        <p><span class="contact-icon">📅</span> <span >22/08/2028</span></p>
-        <select class="signer-select">
-            <option value="directeur">Signé par Directeur</option>
-            <option value="assistant">Signé par Assistant</option>
-        </select>
-        <button class="generate-cert">Générer Certificat</button>
+        <form method="get" action="/certificate">
+            <!-- Si admin -->
+            <input type="text" class="admin-input" name="login"
+                th:if="${kind == 'admin'}" required>
+
+            <!-- Si pas admin -->
+            <input type="hidden" name="login" th:value="${userResponse.login}" th:unless="${kind == 'admin'}">
+
+            <!-- Select custom -->
+            <div class="sel sel--black-panther">
+                <select name="signer_par" id="signer_par" required>
+                    <option value="Aucune">Aucune</option>
+                    <option value="Directeur">Directeur</option>
+                    <option value="Assistant">Assistant</option>
+                </select>
+            </div>
+
+            <button type="submit" class="codepen-button"><span>GENERER CERTIFICAT</span></button>
+            <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
+                <div class="spinner"></div>
+                <div style="color:#00ffcc; margin-top:5px;">Génération en cours...</div>
+            </div>
+        </form>
+
     </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Script custom select -->
+    <script>
+    $('form').on('submit', function(e) {
+        e.preventDefault();
+
+        const form = $(this);
+        const login = form.find('input[name="login"]').val();
+        const signerPar = form.find('select[name="signer_par"]').val();
+        const button = form.find('button[type="submit"]');
+
+        button.prop('disabled', true);
+        $('#loader').show();
+
+        const url = `/certificate?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}`;
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error); });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `certificat_scolarite_${login}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(err => {
+                alert(err.message);  // <-- affichage dans popup
+            })
+            .finally(() => {
+                $('#loader').hide();
+                button.prop('disabled', false);
+            });
+    });
+
+
+
+
+    // Transformer tous les <select> avec .sel
+    $('.sel').each(function() {
+      $(this).children('select').css('display', 'none');
+      
+      var $current = $(this);
+      
+      $(this).find('option').each(function(i) {
+        if (i === 0) {
+          // Crée la box + placeholder
+          $current.prepend($('<div>', {
+            class: $current.attr('class').replace(/sel/g, 'sel__box')
+          }));
+          
+          var placeholder = $(this).text();
+          $current.prepend($('<span>', {
+            class: $current.attr('class').replace(/sel/g, 'sel__placeholder'),
+            text: placeholder,
+            'data-placeholder': placeholder
+          }));
+          return;
+        }
+        
+        // Ajoute chaque option comme <span>
+        $current.children('div').append($('<span>', {
+          class: $current.attr('class').replace(/sel/g, 'sel__box__options'),
+          text: $(this).text()
+        }));
+      });
+    });
+
+    // Toggle .active sur clic
+    $('.sel').click(function() {
+      $(this).toggleClass('active');
+    });
+
+    // Changer la valeur sélectionnée
+    $(document).on('click', '.sel__box__options', function() {
+      var txt = $(this).text();
+      var index = $(this).index();
+      
+      $(this).siblings('.sel__box__options').removeClass('selected');
+      $(this).addClass('selected');
+      
+      var $currentSel = $(this).closest('.sel');
+      $currentSel.children('.sel__placeholder').text(txt);
+      $currentSel.children('select').prop('selectedIndex', index + 1);
+    });
+    </script>
 </body>
 </html>
