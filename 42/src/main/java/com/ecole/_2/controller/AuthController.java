@@ -1,6 +1,6 @@
 package com.ecole._2.controller;
 
-import com.ecole._2.models.UserResponse;
+import com.ecole._2.models.User;
 import com.ecole._2.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,20 +20,15 @@ public class AuthController {
             @RequestParam("password") String password,
             Model model
     ) {
-        UserResponse response = new UserResponse();
+        User user;
         try {
-            response = userService.getUserId(username);
+            user = userService.getUser(username);
         } catch (Exception e) {
-            System.out.println("message d'erreur: " + e.getMessage());
-            model.addAttribute("error", "Erreur de connexion au serveur FastAPI");
+            model.addAttribute("error", "Erreur connexion FastAPI");
             return "login";
         }
 
-        // Mettre les infos dans le modèle
-        model.addAttribute("login", response.getLogin());
-        model.addAttribute("userId", response.getUser_id());
-
-        // Rediriger vers home.html
+        model.addAttribute("user", user);
         return "home";
     }
 }

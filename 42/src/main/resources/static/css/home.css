@@ -1,0 +1,126 @@
+body {
+    margin: 0;
+    height: 100%;
+    font-family: 'Arial', sans-serif;
+    background: url('/images/Background.png') no-repeat center center fixed;
+    background-size: cover;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-card {
+    background: #252525;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+}
+
+.profile-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-right: 20px;
+}
+
+.name-status {
+    display: flex;
+    flex-direction: column;
+}
+
+.name-status h2 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.username {
+    color: #888;
+}
+
+.status {
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 0.8em;
+}
+
+.unavailable {
+    background: #ff4444;
+    color: #fff;
+}
+
+.progress-section {
+    text-align: right;
+}
+
+.progress {
+    margin-bottom: 10px;
+}
+
+.progress-number {
+    font-size: 2em;
+    color: #00ffcc;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 10px;
+    background: #333;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #00ffcc;
+    border-radius: 5px;
+}
+
+.stats {
+    color: #888;
+}
+
+.contact-card {
+    background: #252525;
+    border-radius: 10px;
+    padding: 20px;
+    color: #fff;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.contact-icon {
+    margin-right: 10px;
+    color: #00ffcc;
+}
+
+.generate-cert {
+    background-color: #00ffcc;
+    color: #252525;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.generate-cert:hover {
+    background-color: #00b894;
+}
+
+.signer-select {
+    margin-top: 10px;
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    background-color: #333;
+    color: #00ffcc;
+    margin-right: 10px;
+}
