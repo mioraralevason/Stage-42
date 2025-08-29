@@ -3,17 +3,17 @@ package com.ecole._2.services;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.ecole._2.models.TokenResponse;
 import com.ecole._2.models.User;
-import com.ecole._2.models.UserResponse;
 
 @Service
-public class UserService {
+public class PythonService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public UserResponse getUserId(String login)throws Exception {
+    public User getUserId(String login)throws Exception {
         String url = "http://127.0.0.1:8000/get_id_users/" + login;
-        return restTemplate.getForObject(url, UserResponse.class);
+        return restTemplate.getForObject(url, User.class);
     }
 
     public String getUserCandidature(String userId) {
@@ -25,4 +25,10 @@ public class UserService {
         String url = "http://127.0.0.1:8000/get_user/" + login;
         return restTemplate.getForObject(url, User.class);
     }
+
+    public String getTokenAdminUser() {
+    String url = "http://127.0.0.1:8000/get_access_token";
+    TokenResponse response = restTemplate.getForObject(url, TokenResponse.class);
+    return (response != null) ? response.getAccessToken() : null;
+}
 }

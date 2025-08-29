@@ -4,10 +4,22 @@ import re
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pdf import generate_certificate
-from api import get_id_users, get_user, get_user_candidature
+from api import get_id_users, get_user, get_user_candidature,get_access_token
 
 # Initialize FastAPI app
 app = FastAPI(title="42 Certificate API", description="API for generating school certificates using 42 API data")
+
+@app.get("/get_access_token")
+async def api_get_access_token():
+    """Endpoint to get access token."""
+    try:
+        access_token = get_access_token()
+        return {"access_token": access_token}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
 @app.get("/get_id_users/{login}")
 async def api_get_id_users(login: str):

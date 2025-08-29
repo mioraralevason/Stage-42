@@ -1,8 +1,8 @@
 package com.ecole._2.controller;
 
 import com.ecole._2.models.TokenResponse;
-import com.ecole._2.models.User42Service;
-import com.ecole._2.models.UserResponse;
+import com.ecole._2.services.User42Service;
+import com.ecole._2.models.User;
 import com.ecole._2.services.OAuth42Service;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,25 +27,20 @@ public class AuthController {
             Model model,
             HttpSession session
     ) {
-        // Vérifie si les données sont déjà en session
+        // Vérifie si les données sont déjà en sessios
         TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
-        if (tokenResponse == null) {
-            tokenResponse = oauth42Service.getAccessToken(code);
-            session.setAttribute("tokenResponse", tokenResponse);
-            session.setAttribute("code", code);
-            session.setAttribute("state", state);
-        }
+        tokenResponse = oauth42Service.getAccessToken(code);
+        session.setAttribute("tokenResponse", tokenResponse);
+        session.setAttribute("code", code);
+        session.setAttribute("state", state);
 
-        UserResponse userResponse = (UserResponse) session.getAttribute("userResponse");
+        User userResponse = (User) session.getAttribute("userResponse");
         if (userResponse == null) {
             userResponse = user42Service.getUserInfo(tokenResponse.getAccessToken());
             session.setAttribute("userResponse", userResponse);
         }
 
         // Ajouter les objets au model pour Thymeleaf
-        model.addAttribute("code", session.getAttribute("code"));
-        model.addAttribute("state", session.getAttribute("state"));
-        model.addAttribute("tokenResponse", session.getAttribute("tokenResponse"));
         model.addAttribute("userResponse", session.getAttribute("userResponse"));
         model.addAttribute("kind", userResponse.getKind());
         session.setAttribute("kind", userResponse.getKind());
