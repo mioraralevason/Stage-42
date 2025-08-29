@@ -1,6 +1,6 @@
-package com.ecole._2.models;
+package com.ecole._2.services;
 
-import com.ecole._2.models.UserResponse;
+import com.ecole._2.models.User;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -10,18 +10,16 @@ public class User42Service {
 
     private static final String USER_URL = "https://api.intra.42.fr/v2/me";
 
-    public UserResponse getUserInfo(String accessToken) {
+    public User getUserInfo(String accessToken) {
         RestTemplate restTemplate = new RestTemplate();
 
-        // Préparer les headers avec le token
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
 
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        // Appel GET à l’API
-        ResponseEntity<UserResponse> response =
-                restTemplate.exchange(USER_URL, HttpMethod.GET, entity, UserResponse.class);
+        ResponseEntity<User> response =
+                restTemplate.exchange(USER_URL, HttpMethod.GET, entity, User.class);
 
         return response.getBody();
     }
