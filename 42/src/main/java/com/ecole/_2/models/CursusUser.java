@@ -88,4 +88,5 @@ public class CursusUser {
         System.out.println((int)getLevel());
         return (int)(getLevel());
     }
+    
 }

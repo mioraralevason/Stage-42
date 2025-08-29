@@ -1,0 +1,136 @@
+<div th:fragment="freeze" class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Dashboard Cursus</h1>
+    </div>
+
+    <div class="stats-grid">
+        <!-- Date de début -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-label">Date de début</span>
+                <span class="stat-value" th:text="${userCursus.getBegin_at()}"></span>
+            </div>
+        </div>
+
+        <!-- Nombre de jours total -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-label">Jours total</span>
+                <span class="stat-value" th:text="${locationStats.getNbDays(userCursus.getBegin_at(), null)}"></span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" 
+                         th:style="'width: ' + ${(locationStats.getNbDays(userCursus.getBegin_at(), null) / 365.0) * 100} + '%'"></div>
+                </div>
+                <div class="progress-text">
+                    <span class="progress-current" th:text="${locationStats.getNbDays(userCursus.getBegin_at(), null)} + ' jours'"></span>
+                    <span class="progress-total">/ 365 jours</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jours ouvrables -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-label">Jours ouvrables</span>
+                <span class="stat-value" th:text="${#numbers.formatInteger(locationStats.getNbOpenDays(userCursus.getBegin_at(), null), 0)}"></span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" 
+                         th:style="'width: ' + ${(locationStats.getNbOpenDays(userCursus.getBegin_at(), null) / 250.0) * 100} + '%'"></div>
+                </div>
+                <div class="progress-text">
+                    <span class="progress-current" th:text="${locationStats.getNbOpenDays(userCursus.getBegin_at(), null)} + ' jours'"></span>
+                    <span class="progress-total">/ 250 jours</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total d'heures -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-label">Total d'heures</span>
+                <span class="stat-value" th:text="${#numbers.formatInteger(locationStats.getTotalHours(userCursus.getBegin_at(), null), 0)} + 'h'"></span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" 
+                         th:style="'width: ' + ${(locationStats.getTotalHours(userCursus.getBegin_at(), null) / 1700.0) * 100} + '%'"></div>
+                </div>
+                <div class="progress-text">
+                    <span class="progress-current" th:text="${#numbers.formatInteger(locationStats.getTotalHours(userCursus.getBegin_at(), null), 0)} + 'h'"></span>
+                    <span class="progress-total">/ 1,700h</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Milestone -->
+    <div class="milestone-section">
+        <div class="milestone-content">
+            <div class="milestone-header">
+                <h2 class="milestone-title">Milestone Actuel</h2>
+            </div>
+            <div class="milestone-value" th:text="${userCursus.getMilestone()}"></div>
+            
+            <!-- Barre de progression pour le milestone -->
+            <div class="progress-container" style="margin-top: 20px;">
+                <div class="progress-bar" style="height: 12px;">
+                    <div class="progress-fill" 
+                         th:style="'width: ' + ${(userCursus.getMilestone() / 10.0) * 100} + '%; background: linear-gradient(90deg, #00fff2, #ffffff);'"></div>
+                </div>
+                <div class="progress-text">
+                    <span class="progress-current" th:text="'Level ' + ${userCursus.getMilestone()}"></span>
+                    <span class="progress-total">/ Level 10</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jours de Freeze -->
+    <div class="stat-card freeze-card" style="margin-top: 20px;">
+        <div class="stat-header">
+            <i class="fas fa-snowflake stat-icon"></i>
+            <span class="stat-label">Jours de freeze</span>
+            <span class="stat-value" th:text="${#numbers.formatInteger(freeze, 0)} + ' jours'"></span>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" 
+                     th:style="'width: ' + ${freeze > 0 ? (freeze / 30.0) * 100 : 0} + '%; background: linear-gradient(90deg, #ff4444, #ff6666);'"
+                     style="box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);"></div>
+            </div>
+            <div class="progress-text">
+                <span class="progress-current" th:text="${#numbers.formatInteger(freeze, 0)} + ' jours'"></span>
+                <span class="progress-total">/ 30 jours max</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.progress-fill');
+
+    progressBars.forEach(bar => {
+        const finalWidth = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.width = finalWidth;
+        }, 500);
+    });
+});
+
+setInterval(() => {
+    const cards = document.querySelectorAll('.stat-card');
+    const randomCard = cards[Math.floor(Math.random() * cards.length)];
+    randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
+    
+    setTimeout(() => {
+        randomCard.style.boxShadow = 'none';
+    }, 1000);
+}, 3000);
+</script>
