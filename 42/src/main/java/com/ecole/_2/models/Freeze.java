@@ -51,6 +51,10 @@ public class Freeze {
         D = d;
     }
     public double calculFreeze(){
+        if (getD() == 0 || getA() == 0 || getB() == 0){
+            return 0;
+            
+        }
         return (getA()/getB()) + (getC()/getA()) * getD();
     }
 }

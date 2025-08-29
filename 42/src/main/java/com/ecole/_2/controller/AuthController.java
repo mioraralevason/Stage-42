@@ -46,6 +46,6 @@ public class AuthController {
         session.setAttribute("kind", userResponse.getKind());
         // model.addAttribute("kind", "admin");
         
-        return "home";
+        return "certificat-page";
     }
 }

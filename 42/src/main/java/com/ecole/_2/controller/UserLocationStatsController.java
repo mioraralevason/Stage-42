@@ -27,21 +27,30 @@ public class UserLocationStatsController {
     @Autowired
     private PythonService pythonService;
 
-    @GetMapping("/locations-stats")
+    @GetMapping("/freeze")
     public String getLocationsStats(@RequestParam("user_id") String userId, HttpSession session, Model model) {
         userId = ((User) session.getAttribute("userResponse")).getId();
         userId = "211018";
-        String tokenAdmin = pythonService.getTokenAdminUser();
-        CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
-        UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin);
-        model.addAttribute("locationStats", userLocationStat);
-        model.addAttribute("userCursus", userCursus);
-        Freeze freeze = new Freeze();
-        freeze.setA(userLocationStat.getNbDays(userCursus.getBegin_at(),null));
-        freeze.setB(userLocationStat.getNbOpenDays(userCursus.getBegin_at(), null));
-        freeze.setC(userLocationStat.getTotalHours(userCursus.getBegin_at(), null));
-        freeze.setD(userCursus.getMilestone());
-        model.addAttribute("freeze", freeze.calculFreeze());
-        return "homeTest";
+
+        try {
+            String tokenAdmin = pythonService.getTokenAdminUser();
+            CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
+            UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin);
+
+            model.addAttribute("locationStats", userLocationStat);
+            model.addAttribute("userCursus", userCursus);
+            Freeze freeze = new Freeze();
+            freeze.setA(userLocationStat.getNbDays(userCursus.getBegin_at(),null));
+            freeze.setB(userLocationStat.getNbOpenDays(userCursus.getBegin_at(), null));
+            freeze.setC(userLocationStat.getTotalHours(userCursus.getBegin_at(), null));
+            freeze.setD(userCursus.getMilestone());
+            model.addAttribute("freeze", freeze.calculFreeze());
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return new CertificateController().auth(model, session);
+        }
+
+
+        return "freeze-page";
     }
 }

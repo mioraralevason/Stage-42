@@ -1,7 +1,6 @@
 package com.ecole._2.models;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CursusUserList {
     private String userId;
@@ -10,19 +9,28 @@ public class CursusUserList {
     public CursusUserList() {}
 
     public CursusUserList(String userId, List<CursusUser> cursus_users) {
-        this.userId = userId;
-        this.cursus_users = cursus_users;
+        this.setUserId(userId);
+        this.setCursusUsers(cursus_users);
     }
 
-    public String getUserId() {
+    public String getUserId() throws IllegalStateException {
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalStateException("User ID is not set");
+        }
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(String userId) throws IllegalArgumentException {
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty");
+        }
         this.userId = userId;
     }
 
-    public List<CursusUser> getCursusUsers() {
+    public List<CursusUser> getCursusUsers() throws IllegalStateException {
+        if (cursus_users == null || cursus_users.isEmpty()) {
+            throw new IllegalStateException("Cursus users list is empty");
+        }
         return cursus_users;
     }
 
@@ -35,14 +43,15 @@ public class CursusUserList {
      * @param grade le grade à filtrer (ex: "Cadet", "Pisciner")
      * @return CursusUser correspondant au grade
      */
-    public CursusUser filterByGrade(String grade) {
-        if (cursus_users == null || grade == null || grade.isEmpty()) {
-            return null;
-        }
-
-        return cursus_users.stream()
+    public CursusUser filterByGrade(String grade)throws IllegalStateException {
+        List<CursusUser> cursusUserList = getCursusUsers();
+        CursusUser result = cursusUserList.stream()
                 .filter(c -> grade.equalsIgnoreCase(c.getGrade()))
                 .findFirst()
                 .orElse(null);
+        if (result == null) {
+            throw new IllegalStateException("No CursusUser found with grade: " + grade);
+        }
+        return result;
     }
 }
