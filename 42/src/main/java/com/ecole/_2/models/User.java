@@ -3,21 +3,22 @@ package com.ecole._2.models;
 import java.util.List;
 
 public class User {
-    private int id;
+    private String id;
     private String email;
     private String login;
     private String first_name;
     private String last_name;
     private String usual_full_name;
+    private String kind;
     private Image image;
     private List<CursusUser> cursus_users;
 
     // Getters et Setters
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -59,6 +60,14 @@ public class User {
 
     public void setUsual_full_name(String usual_full_name) {
         this.usual_full_name = usual_full_name;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public String getKind() {
+        return kind;
     }
 
     public Image getImage() {

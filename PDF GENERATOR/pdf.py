@@ -221,7 +221,7 @@ def generate_certificate(login, signer_par="Directeur"):
             nationalite=nationalite,
             zip_code=zip_code,
             ville=ville,
-            monsieur_madame="Monsieur" if user_data.get("gender") == "male" else "Madame",
+            monsieur_madame="Monsieur" if user_data.get("gender") == "male" else "Madame" if user_data.get("gender") == "female" else "Inconnu",
             signer_par=signer_par
         )
 
