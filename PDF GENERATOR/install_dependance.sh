@@ -24,6 +24,8 @@ pip install python-dotenv
 sudo apt install python3-tk
 pip install requests
 pip install fastapi uvicorn
+pip install requests requests_oauthlib
+pip install google-auth-oauthlib google-auth-httplib2
 
 # Verify installations
 echo "Verifying installed packages..."
