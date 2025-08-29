@@ -283,3 +283,9 @@ input[name="login"]::placeholder {
     .codepen-button span { font-size: 0.95rem; padding: 0.8rem 1rem; }
     .sel__placeholder, .sel__box__options { font-size: 1rem; }
 }
+
+/* ===== Ajustement container global ===== */
+.container {
+    display: flex;
+    min-height: 100vh;
+}
