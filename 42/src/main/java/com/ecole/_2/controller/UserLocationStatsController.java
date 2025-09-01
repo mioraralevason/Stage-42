@@ -2,9 +2,8 @@ package com.ecole._2.controller;
 
 import com.ecole._2.models.CursusUser;
 import com.ecole._2.models.Freeze;
-import com.ecole._2.models.User;
 import com.ecole._2.models.UserLocationStat;
-import com.ecole._2.services.PythonService;
+import com.ecole._2.services.ApiService;
 import com.ecole._2.services.UserCursusService;
 import com.ecole._2.services.UserLocationStatsService;
 
@@ -25,15 +24,22 @@ public class UserLocationStatsController {
     private UserCursusService userCursusService;
 
     @Autowired
-    private PythonService pythonService;
+    private ApiService apiService;
 
     @GetMapping("/freeze")
     public String getLocationsStats(@RequestParam("user_id") String userId, HttpSession session, Model model) {
-        userId = ((User) session.getAttribute("userResponse")).getId();
         userId = "211018";
-
+        if(userId == null) {
+            model.addAttribute("error", "User ID is required");
+            return new CertificateController().auth(model, session);
+        }
+        String kind = (String) session.getAttribute("kind");
+        if (kind == null || (!kind.equals("admin"))) {
+            userId = "203988";
+            // userId = ((User) session.getAttribute("userResponse")).getId();
+        }
         try {
-            String tokenAdmin = pythonService.getTokenAdminUser();
+            String tokenAdmin = apiService.getAccessToken();
             CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
             UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin);
 
