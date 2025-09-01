@@ -9,7 +9,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.ecole._2.models.TokenResponse;
 
-import java.util.Map;
 
 @Service
 public class OAuth42Service {
