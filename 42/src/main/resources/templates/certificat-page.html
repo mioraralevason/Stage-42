@@ -38,79 +38,117 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
     $(document).ready(function() {
-        const $sidebar = $('.sidebar');
-        const $hoverArea = $('.hover-area');
+    const $sidebar = $('.sidebar');
+    const $hoverArea = $('.hover-area');
 
-        $hoverArea.on('mouseenter', function() {
-            $sidebar.addClass('visible');
-        });
+    $hoverArea.on('mouseenter', function() {
+        $sidebar.addClass('visible');
+    });
 
-        $sidebar.on('mouseleave', function() {
-            $sidebar.removeClass('visible');
-        });
+    $sidebar.on('mouseleave', function() {
+        $sidebar.removeClass('visible');
+    });
 
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            const login = form.find('input[name="login"]').val();
-            const signerPar = form.find('select[name="signer_par"]').val();
-            const button = form.find('button[type="submit"]');
+    $('form').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const login = form.find('input[name="login"]').val();
+        const signerPar = form.find('select[name="signer_par"]').val();
+        const button = form.find('button[type="submit"]');
 
-            button.prop('disabled', true);
-            $('#loader').show();
+        // Validation côté client
+        if (!login || login.trim() === '') {
+            alert('Le login est requis');
+            return;
+        }
 
-            const url = `/certificate?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}`;
+        button.prop('disabled', true);
+        $('#loader').show();
 
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) return response.json().then(err => { throw new Error(err.error); });
-                    return response.blob();
-                })
-                .then(blob => {
-                    const link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = `certificat_scolarite_${login}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                })
-                .catch(err => { alert(err.message); })
-                .finally(() => { $('#loader').hide(); button.prop('disabled', false); });
-        });
+        const url = `/certificate-generator?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}`;
 
-        $('.sel').each(function() {
-            $(this).children('select').css('display', 'none');
-            var $current = $(this);
-            $(this).find('option').each(function(i) {
-                if (i === 0) {
-                    $current.prepend($('<div>', { class: $current.attr('class').replace(/sel/g, 'sel__box') }));
-                    var placeholder = $(this).text();
-                    $current.prepend($('<span>', {
-                        class: $current.attr('class').replace(/sel/g, 'sel__placeholder'),
-                        text: placeholder,
-                        'data-placeholder': placeholder
-                    }));
-                    return;
+        fetch(url)
+            .then(response => {
+                // Vérifier le Content-Type pour savoir comment traiter la réponse
+                const contentType = response.headers.get('content-type');
+                
+                if (!response.ok) {
+                    // Si c'est du JSON, essayer de le parser
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error || 'Erreur inconnue du serveur');
+                        });
+                    } else {
+                        // Si ce n'est pas du JSON, utiliser le texte de statut
+                        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+                    }
                 }
-                $current.children('div').append($('<span>', {
-                    class: $current.attr('class').replace(/sel/g, 'sel__box__options'),
-                    text: $(this).text()
-                }));
+                
+                // Vérifier que c'est bien un PDF
+                if (contentType && contentType.includes('application/pdf')) {
+                    return response.blob();
+                } else {
+                    throw new Error('Format de réponse inattendu. PDF attendu.');
+                }
+            })
+            .then(blob => {
+                // Créer et télécharger le fichier PDF
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `certificat_scolarite_${login}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Nettoyer l'URL object
+                window.URL.revokeObjectURL(link.href);
+            })
+            .catch(err => {
+                console.error('Erreur lors de la génération du certificat:', err);
+                alert('Erreur: ' + err.message);
+            })
+            .finally(() => {
+                $('#loader').hide();
+                button.prop('disabled', false);
             });
-        });
+    });
 
-        $('.sel').click(function() { $(this).toggleClass('active'); });
-
-        $(document).on('click', '.sel__box__options', function() {
-            var txt = $(this).text();
-            var index = $(this).index();
-            $(this).siblings('.sel__box__options').removeClass('selected');
-            $(this).addClass('selected');
-            var $currentSel = $(this).closest('.sel');
-            $currentSel.children('.sel__placeholder').text(txt);
-            $currentSel.children('select').prop('selectedIndex', index + 1);
+    // Custom select handling
+    $('.sel').each(function() {
+        $(this).children('select').css('display', 'none');
+        var $current = $(this);
+        $(this).find('option').each(function(i) {
+            if (i === 0) {
+                $current.prepend($('<div>', { class: $current.attr('class').replace(/sel/g, 'sel__box') }));
+                var placeholder = $(this).text();
+                $current.prepend($('<span>', {
+                    class: $current.attr('class').replace(/sel/g, 'sel__placeholder'),
+                    text: placeholder,
+                    'data-placeholder': placeholder
+                }));
+                return;
+            }
+            $current.children('div').append($('<span>', {
+                class: $current.attr('class').replace(/sel/g, 'sel__box__options'),
+                text: $(this).text()
+            }));
         });
     });
+
+    $('.sel').click(function() { 
+        $(this).toggleClass('active'); 
+    });
+
+    $(document).on('click', '.sel__box__options', function() {
+        var txt = $(this).text();
+        var index = $(this).index();
+        $(this).siblings('.sel__box__options').removeClass('selected');
+        $(this).addClass('selected');
+        var $currentSel = $(this).closest('.sel');
+        $currentSel.children('.sel__placeholder').text(txt);
+        $currentSel.children('select').prop('selectedIndex', index + 1);
+    });
+});
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {

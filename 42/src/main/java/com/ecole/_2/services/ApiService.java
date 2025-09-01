@@ -6,15 +6,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 @Service
 public class ApiService {
     
-    @Value("${app.client_id")
+    private static final Logger logger = LoggerFactory.getLogger(ApiService.class);
+    
+    @Value("${app.client_id}")
     private String uid;
     
     @Value("${app.client_secret}")
@@ -32,6 +38,8 @@ public class ApiService {
      */
     public String getAccessToken() {
         try {
+            logger.info("Demande de token d'accès à l'API 42");
+            
             MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
             data.add("grant_type", "client_credentials");
             data.add("scope", "public projects profile tig elearning forum");
@@ -45,13 +53,24 @@ public class ApiService {
             ResponseEntity<String> response = restTemplate.postForEntity(ACCESS_TOKEN_URL, request, String.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                logger.info("Token d'accès obtenu avec succès");
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
-                return jsonNode.get("access_token").asText();
+                
+                if (jsonNode.has("access_token")) {
+                    return jsonNode.get("access_token").asText();
+                } else {
+                    throw new RuntimeException("Token d'accès non trouvé dans la réponse");
+                }
             } else {
-                throw new RuntimeException("Erreur lors de l'obtention du jeton d'accès");
+                logger.error("Erreur lors de l'obtention du token: {}", response.getStatusCode());
+                throw new RuntimeException("Erreur lors de l'obtention du jeton d'accès: " + response.getStatusCode());
             }
             
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            logger.error("Erreur HTTP lors de l'obtention du token: {}", e.getMessage());
+            throw new RuntimeException("Erreur d'authentification avec l'API 42: " + e.getStatusCode());
         } catch (Exception e) {
+            logger.error("Erreur lors de l'obtention du token: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de l'obtention du jeton: " + e.getMessage(), e);
         }
     }
@@ -61,6 +80,8 @@ public class ApiService {
      */
     public String getIdUsers(String login, String token) {
         try {
+            logger.info("Recherche de l'utilisateur: {}", login);
+            
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
             headers.set("Content-Type", "application/json");
@@ -71,17 +92,32 @@ public class ApiService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                JsonNode jsonNode = objectMapper.readTree(response.getBody());
+                String responseBody = response.getBody();
+                logger.debug("Réponse de recherche utilisateur: {}", responseBody);
+                
+                // Vérifier si la réponse n'est pas vide
+                if (responseBody.trim().isEmpty()) {
+                    throw new RuntimeException("Réponse vide de l'API pour l'utilisateur: " + login);
+                }
+                
+                JsonNode jsonNode = objectMapper.readTree(responseBody);
                 if (jsonNode.isArray() && jsonNode.size() > 0) {
-                    return jsonNode.get(0).get("id").asText();
+                    String userId = jsonNode.get(0).get("id").asText();
+                    logger.info("ID utilisateur trouvé: {} pour login: {}", userId, login);
+                    return userId;
                 } else {
-                    throw new RuntimeException("Utilisateur non trouvé");
+                    throw new RuntimeException("Utilisateur non trouvé: " + login);
                 }
             } else {
-                throw new RuntimeException("Erreur lors de la récupération de l'ID utilisateur");
+                logger.error("Erreur lors de la recherche utilisateur: {}", response.getStatusCode());
+                throw new RuntimeException("Erreur lors de la récupération de l'ID utilisateur: " + response.getStatusCode());
             }
             
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            logger.error("Erreur HTTP lors de la recherche utilisateur: {}", e.getMessage());
+            throw new RuntimeException("Erreur API lors de la récupération de l'ID utilisateur: " + e.getStatusCode());
         } catch (Exception e) {
+            logger.error("Erreur lors de la recherche utilisateur: {}", e.getMessage());
             throw new RuntimeException("Erreur API lors de la récupération de l'ID utilisateur: " + e.getMessage(), e);
         }
     }
@@ -91,6 +127,8 @@ public class ApiService {
      */
     public Map<String, Object> getUser(String userId, String token) {
         try {
+            logger.info("Récupération des données utilisateur: {}", userId);
+            
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
             
@@ -100,12 +138,26 @@ public class ApiService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return objectMapper.readValue(response.getBody(), Map.class);
+                String responseBody = response.getBody();
+                
+                // Vérifier si la réponse n'est pas vide
+                if (responseBody.trim().isEmpty()) {
+                    throw new RuntimeException("Réponse vide de l'API pour l'utilisateur ID: " + userId);
+                }
+                
+                Map<String, Object> userData = objectMapper.readValue(responseBody, Map.class);
+                logger.info("Données utilisateur récupérées avec succès pour ID: {}", userId);
+                return userData;
             } else {
-                throw new RuntimeException("Erreur lors de la récupération de l'utilisateur");
+                logger.error("Erreur lors de la récupération utilisateur: {}", response.getStatusCode());
+                throw new RuntimeException("Erreur lors de la récupération de l'utilisateur: " + response.getStatusCode());
             }
             
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            logger.error("Erreur HTTP lors de la récupération utilisateur: {}", e.getMessage());
+            throw new RuntimeException("Erreur lors de la récupération de l'utilisateur: " + e.getStatusCode());
         } catch (Exception e) {
+            logger.error("Erreur lors de la récupération utilisateur: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération de l'utilisateur: " + e.getMessage(), e);
         }
     }
@@ -115,6 +167,8 @@ public class ApiService {
      */
     public Map<String, Object> getUserCandidature(String userId, String token) {
         try {
+            logger.info("Récupération des données de candidature: {}", userId);
+            
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
             
@@ -124,12 +178,26 @@ public class ApiService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return objectMapper.readValue(response.getBody(), Map.class);
+                String responseBody = response.getBody();
+                
+                // Vérifier si la réponse n'est pas vide
+                if (responseBody.trim().isEmpty()) {
+                    throw new RuntimeException("Réponse vide de l'API pour les données de candidature ID: " + userId);
+                }
+                
+                Map<String, Object> candidatureData = objectMapper.readValue(responseBody, Map.class);
+                logger.info("Données de candidature récupérées avec succès pour ID: {}", userId);
+                return candidatureData;
             } else {
-                throw new RuntimeException("Erreur lors de la récupération des données de candidature");
+                logger.error("Erreur lors de la récupération candidature: {}", response.getStatusCode());
+                throw new RuntimeException("Erreur lors de la récupération des données de candidature: " + response.getStatusCode());
             }
             
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            logger.error("Erreur HTTP lors de la récupération candidature: {}", e.getMessage());
+            throw new RuntimeException("Erreur lors de la récupération des données de candidature: " + e.getStatusCode());
         } catch (Exception e) {
+            logger.error("Erreur lors de la récupération candidature: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération des données de candidature: " + e.getMessage(), e);
         }
     }
