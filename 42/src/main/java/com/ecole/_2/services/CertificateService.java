@@ -140,6 +140,7 @@ public class CertificateService {
             Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
             Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.BLACK);
             Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 10, BaseColor.BLACK);
+            Font footerFont2 = FontFactory.getFont(FontFactory.HELVETICA, 10, new BaseColor(39, 221, 245));
 
             // Titre
             Paragraph title = new Paragraph("Certificat de scolarité", titleFont);
@@ -215,7 +216,9 @@ public class CertificateService {
             // Footer
             Paragraph footer = new Paragraph();
             footer.add(new Chunk("BY ", footerFont));
-            footer.add(new Chunk(etablissement, footerFont));
+            Chunk etablissementChunk = new Chunk(etablissement, footerFont2);
+            etablissementChunk.setUnderline(0.5f, -2f);
+            footer.add(etablissementChunk);
             footer.add(Chunk.NEWLINE);
             footer.add(new Chunk(etablissementAdresse, footerFont));
             footer.setAlignment(Element.ALIGN_CENTER);
@@ -236,31 +239,41 @@ public class CertificateService {
             float pageWidth = PageSize.A4.getWidth();
             float pageHeight = PageSize.A4.getHeight();
             
-            // Logo en haut - vérification d'existence et gestion d'erreur
+            // Logo centré en haut
             try {
                 if (logoPath != null && !logoPath.equals("Inconnu.png") && Files.exists(Paths.get(logoPath))) {
                     Image logo = Image.getInstance(logoPath);
                     logo.scaleToFit(pageWidth - 113.4f, 113.4f);
-                    logo.setAbsolutePosition(56.7f, pageHeight - 113.4f);
+                    
+                    float logoWidth = logo.getScaledWidth();
+                    float logoX = (pageWidth - logoWidth) / 2;  
+                    float logoY = pageHeight - logo.getScaledHeight();
+
+                    logo.setAbsolutePosition(logoX, logoY);
                     canvas.addImage(logo);
                 }
             } catch (Exception e) {
                 System.err.println("Erreur logo: " + e.getMessage());
             }
             
-            // Tampon - vérification d'existence et gestion d'erreur
+            // Tampon → un peu plus à droite
             try {
                 if (tamponPath != null && !tamponPath.equals("Inconnu.png") && Files.exists(Paths.get(tamponPath))) {
                     Image tampon = Image.getInstance(tamponPath);
                     tampon.scaleToFit(170.1f, 105.8f);
-                    tampon.setAbsolutePosition(226.8f, 170.1f);
+
+                    float tamponWidth = tampon.getScaledWidth();
+                    float tamponX = pageWidth - tamponWidth - 56.7f; // marge droite
+                    float tamponY = 170.1f; // même hauteur que ton code
+
+                    tampon.setAbsolutePosition(tamponX, tamponY);
                     canvas.addImage(tampon);
                 }
             } catch (Exception e) {
                 System.err.println("Erreur tampon: " + e.getMessage());
             }
             
-            // Signature selon le signataire - vérification d'existence et gestion d'erreur
+            // Signature
             try {
                 String signaturePath = null;
                 if ("Directeur".equals(signerPar)) {
@@ -281,9 +294,9 @@ public class CertificateService {
             
         } catch (Exception e) {
             System.err.println("Erreur générale lors du dessin des images: " + e.getMessage());
-            // Continue sans les images plutôt que de faire échouer tout le PDF
         }
     }
+
 
     /**
      * Formate la date de naissance de YYYY-MM-DD vers DD/MM/YYYY
