@@ -1,5 +1,7 @@
 package com.ecole._2.controller;
 
+import com.ecole._2.models.TokenResponse;
+import com.ecole._2.models.User;
 import com.ecole._2.services.CertificateService;
 
 import jakarta.servlet.http.HttpSession;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -19,45 +22,55 @@ public class CertificateController {
     @Autowired
     private CertificateService certificateService;
 
-    @GetMapping("/certificate")
-        public ResponseEntity<?> getCertificate(
+    @GetMapping("/certificate-generator")
+        public String getCertificate(
                 @RequestParam("login") String login,
                 @RequestParam(value = "signer_par", defaultValue = "Aucune") String signerPar,
-                HttpSession session
+                HttpSession session,
+                Model model
         ) {
-                if (signerPar.isEmpty() || signerPar == null ||
-                        (!signerPar.equalsIgnoreCase("Aucune") &&
+                User user = null;
+                if (session.getAttribute("userResponse") == null) {
+                    user = (User) session.getAttribute("userResponse");
+                }
+                if (user == null) {
+                        return "redirect:/";
+                }
+
+                if (!signerPar.equalsIgnoreCase("Aucune") &&
                         !signerPar.equalsIgnoreCase("Directeur") &&
-                        !signerPar.equalsIgnoreCase("Assistant"))) {
+                        !signerPar.equalsIgnoreCase("Assistant")) {
                         signerPar = "Aucune";
                 }
 
-                if (session.getAttribute("kind") != null) {
-                        String kind = (String) session.getAttribute("kind");
-                        if (!kind.equals("admin")) {
-                                String sessionLogin = (String) ((com.ecole._2.models.User) session.getAttribute("userResponse")).getLogin();
-                                login = sessionLogin;
-                        }
-                }
-
-                if (login == null || login.isEmpty()) {
-                        return ResponseEntity
-                                .badRequest()
-                                .body("{\"error\":\"Le paramètre 'login' est requis\"}");
+                if (!"admin".equals(session.getAttribute("kind"))) {
+                        login = user.getLogin();
                 }
 
                 try {
                         Resource pdf = certificateService.generateCertificate(login, signerPar);
-                        return ResponseEntity.ok()
-                                .contentType(MediaType.APPLICATION_PDF)
-                                .header(HttpHeaders.CONTENT_DISPOSITION,
-                                        "inline; filename=certificat_scolarite_" + login + ".pdf")
-                                .body(pdf);
+                        model.addAttribute("pdfResource", pdf);
+                        return "certificat-page"; // page qui affichera ou téléchargera le PDF
                 } catch (Exception e) {
-                        return ResponseEntity
-                                .status(500)
-                                .body("{\"error\":\"Erreur lors de la génération du certificat\"}");
+                        model.addAttribute("error", "Erreur lors de la génération du certificat");
+                        return "certificat-page";
                 }
         }
+
+
+        @GetMapping("/certificate")
+        public String auth(
+            Model model,
+            HttpSession session
+    ) {
+
+        User userResponse = (User) session.getAttribute("userResponse");
+        // Ajouter les objets au model pour Thymeleaf
+        model.addAttribute("userResponse", session.getAttribute("userResponse"));
+        model.addAttribute("kind", userResponse.getKind());
+        session.setAttribute("kind", userResponse.getKind());
+        
+        return "certificat-page";
+    }
 
 }

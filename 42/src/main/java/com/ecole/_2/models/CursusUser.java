@@ -1,5 +1,8 @@
 package com.ecole._2.models;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class CursusUser {
     private int id;
     private String begin_at;
@@ -88,4 +91,11 @@ public class CursusUser {
         System.out.println((int)getLevel());
         return (int)(getLevel());
     }
+
+    public String getFormattedBeginAt() {
+        ZonedDateTime zdt = ZonedDateTime.parse(this.begin_at); 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", java.util.Locale.FRENCH);
+        return zdt.format(formatter);
+    }
+    
 }
