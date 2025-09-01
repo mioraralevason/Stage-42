@@ -49,7 +49,6 @@ public class CertificateService {
     @Value("${certificate.etablissement.adresse:Inconnu}")
     private String etablissementAdresse;
 
-    // Mapping des pays vers les nationalités
     private static final Map<String, String> COUNTRY_TO_NATIONALITY = new HashMap<>();
     static {
         COUNTRY_TO_NATIONALITY.put("France", "Française");
@@ -57,15 +56,10 @@ public class CertificateService {
         COUNTRY_TO_NATIONALITY.put("Spain", "Espagnole");
         COUNTRY_TO_NATIONALITY.put("Italy", "Italienne");
         COUNTRY_TO_NATIONALITY.put("Germany", "Allemande");
-        // Ajoutez d'autres mappings selon vos besoins
     }
 
-    /**
-     * Génère un certificat de scolarité pour un utilisateur donné
-     */
     public Resource generateCertificate(String login, String signerPar) {
         try {
-            // Validation des paramètres
             if (login == null || login.trim().isEmpty()) {
                 throw new IllegalArgumentException("Le login ne peut pas être vide");
             }
@@ -78,13 +72,11 @@ public class CertificateService {
                 signerPar = "Aucune";
             }
 
-            // Récupération des données utilisateur
             String token = apiService.getAccessToken();
             String userId = apiService.getIdUsers(login, token);
             Map<String, Object> userData = apiService.getUser(userId, token);
             Map<String, Object> candidatureData = apiService.getUserCandidature(userId, token);
 
-            // Génération du PDF
             ByteArrayOutputStream outputStream = createPdfDocument(userData, candidatureData, signerPar);
             
             return new ByteArrayResource(outputStream.toByteArray());
@@ -94,9 +86,6 @@ public class CertificateService {
         }
     }
 
-    /**
-     * Crée le document PDF
-     */
     private ByteArrayOutputStream createPdfDocument(Map<String, Object> userData, Map<String, Object> candidatureData, String signerPar) throws DocumentException, IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 56.7f, 56.7f, 113.4f, 113.4f);
@@ -104,7 +93,6 @@ public class CertificateService {
         try {
             PdfWriter writer = PdfWriter.getInstance(document, outputStream);
             
-            // Event handler pour dessiner les images sur chaque page
             writer.setPageEvent(new PdfPageEventHelper() {
                 @Override
                 public void onEndPage(PdfWriter writer, Document document) {
@@ -118,7 +106,6 @@ public class CertificateService {
 
             document.open();
             
-            // Création du contenu
             addContent(document, userData, candidatureData, signerPar);
             
         } finally {
@@ -130,25 +117,19 @@ public class CertificateService {
         return outputStream;
     }
 
-    /**
-     * Ajoute le contenu du certificat
-     */
     private void addContent(Document document, Map<String, Object> userData, Map<String, Object> candidatureData, String signerPar) throws DocumentException {
         try {
-            // Styles
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
             Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
             Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.BLACK);
             Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 10, BaseColor.BLACK);
             Font footerFont2 = FontFactory.getFont(FontFactory.HELVETICA, 10, new BaseColor(39, 221, 245));
 
-            // Titre
             Paragraph title = new Paragraph("Certificat de scolarité", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             title.setSpacingAfter(20f);
             document.add(title);
 
-            // Formatage des données
             String nom = getStringValue(userData, "last_name", "Inconnu");
             String prenom = getStringValue(userData, "first_name", "Inconnu");
             String dateNaissance = formatDateNaissance(getStringValue(candidatureData, "birth_date", "2000-01-01"));
@@ -166,19 +147,16 @@ public class CertificateService {
             String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
             String currentYear = String.valueOf(LocalDate.now().getYear());
 
-            // Contenu principal - construction par parties pour éviter les erreurs
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
             content.setSpacingAfter(12f);
             
-            // Première partie
             content.add(new Chunk("Je soussigné, Monsieur ", bodyFont));
             content.add(new Chunk(responsable + ", " + poste, boldFont));
             content.add(new Chunk(" de l'établissement " + etablissement + ", domicilié au " + etablissementAdresse + ", atteste que l'élève :", bodyFont));
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
             
-            // Informations élève
             content.add(new Chunk(monsieurMadame, boldFont));
             content.add(Chunk.NEWLINE);
             content.add(new Chunk("Nom", boldFont));
@@ -201,7 +179,6 @@ public class CertificateService {
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
             
-            // Attestation
             content.add(new Chunk("Est régulièrement " + inscrit + " pour l'année " + currentYear + " à l'école " + etablissement + ", école gratuite sans frais d'écolage, et n'y a pas encore fini ses études.", bodyFont));
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
@@ -209,11 +186,9 @@ public class CertificateService {
             
             document.add(content);
 
-            // Espacement avant footer
             document.add(new Paragraph(" ", bodyFont));
             document.add(new Paragraph(" ", bodyFont));
 
-            // Footer
             Paragraph footer = new Paragraph();
             footer.add(new Chunk("BY ", footerFont));
             Chunk etablissementChunk = new Chunk(etablissement, footerFont2);
@@ -231,15 +206,11 @@ public class CertificateService {
         }
     }
 
-    /**
-     * Dessine les images sur la page
-     */
     private void drawImages(PdfContentByte canvas, String signerPar) {
         try {
             float pageWidth = PageSize.A4.getWidth();
             float pageHeight = PageSize.A4.getHeight();
             
-            // Logo centré en haut
             try {
                 if (logoPath != null && !logoPath.equals("Inconnu.png") && Files.exists(Paths.get(logoPath))) {
                     Image logo = Image.getInstance(logoPath);
@@ -255,16 +226,15 @@ public class CertificateService {
             } catch (Exception e) {
                 System.err.println("Erreur logo: " + e.getMessage());
             }
-            
-            // Tampon → un peu plus à droite
+
             try {
                 if (tamponPath != null && !tamponPath.equals("Inconnu.png") && Files.exists(Paths.get(tamponPath))) {
                     Image tampon = Image.getInstance(tamponPath);
                     tampon.scaleToFit(170.1f, 105.8f);
 
                     float tamponWidth = tampon.getScaledWidth();
-                    float tamponX = pageWidth - tamponWidth - 56.7f; // marge droite
-                    float tamponY = 170.1f; // même hauteur que ton code
+                    float tamponX = pageWidth - tamponWidth - 56.7f;
+                    float tamponY = 170.1f;
 
                     tampon.setAbsolutePosition(tamponX, tamponY);
                     canvas.addImage(tampon);
@@ -273,7 +243,6 @@ public class CertificateService {
                 System.err.println("Erreur tampon: " + e.getMessage());
             }
             
-            // Signature
             try {
                 String signaturePath = null;
                 if ("Directeur".equals(signerPar)) {
@@ -297,10 +266,6 @@ public class CertificateService {
         }
     }
 
-
-    /**
-     * Formate la date de naissance de YYYY-MM-DD vers DD/MM/YYYY
-     */
     private String formatDateNaissance(String birthDate) {
         try {
             if (birthDate == null || birthDate.trim().isEmpty()) {
@@ -317,9 +282,6 @@ public class CertificateService {
         }
     }
 
-    /**
-     * Récupère une valeur String depuis une Map avec valeur par défaut
-     */
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
         if (map == null) return defaultValue;
         Object value = map.get(key);

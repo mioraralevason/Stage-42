@@ -40,19 +40,16 @@ public class CertificateController {
                     .body(error);
             }
             
-            // Validation et nettoyage des paramètres
             if (!signerPar.equalsIgnoreCase("Aucune") &&
                 !signerPar.equalsIgnoreCase("Directeur") &&
                 !signerPar.equalsIgnoreCase("Assistant")) {
                 signerPar = "Aucune";
             }
             
-            // Si ce n'est pas un admin, utiliser le login de la session
             if (!"admin".equals(session.getAttribute("kind"))) {
                 login = user.getLogin();
             }
             
-            // Validation du login
             if (login == null || login.trim().isEmpty()) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Login requis pour générer le certificat.");
@@ -97,13 +94,13 @@ public class CertificateController {
         User userResponse = (User) session.getAttribute("userResponse");
         
         if (userResponse == null) {
-            return "redirect:/login"; // Rediriger vers la page de login si pas d'utilisateur
+            return "redirect:/login";
         }
-        
-        // Ajouter les objets au model pour Thymeleaf
         model.addAttribute("userResponse", userResponse);
+
         // model.addAttribute("kind", userResponse.getKind());
         // session.setAttribute("kind", userResponse.getKind());
+
         model.addAttribute("kind", "admin");
         session.setAttribute("kind", "admin");
         
