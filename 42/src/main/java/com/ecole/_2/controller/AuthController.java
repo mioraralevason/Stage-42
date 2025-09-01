@@ -40,8 +40,10 @@ public class AuthController {
         }
 
         model.addAttribute("userResponse", session.getAttribute("userResponse"));
+
         // model.addAttribute("kind", userResponse.getKind());
         // session.setAttribute("kind", userResponse.getKind());
+
         session.setAttribute("kind", "admin");
         model.addAttribute("kind", "admin");
         
