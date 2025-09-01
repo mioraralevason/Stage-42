@@ -1,6 +1,6 @@
 <div th:fragment="freeze" class="dashboard-container">
     <div class="dashboard-header">
-        <form action="/freeze" method="get">
+        <form action="/freeze" method="get" th:if="${userCursus != null}">
             <div class="group">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
                     <g>
