@@ -41,7 +41,6 @@ public class UserLocationStatsService {
             for (Map.Entry<String, String> entry : rawData.entrySet()) {
                 LocalDate date = LocalDate.parse(entry.getKey());
 
-                // Convertir "HH:mm:ss.SSSSSS" en Duration manuellement
                 String[] hms = entry.getValue().split(":");
                 int hours = Integer.parseInt(hms[0]);
                 int minutes = Integer.parseInt(hms[1]);
@@ -53,7 +52,7 @@ public class UserLocationStatsService {
                 Duration duration = Duration.ofHours(hours)
                         .plusMinutes(minutes)
                         .plusSeconds(seconds)
-                        .plusNanos(micros * 1000); // convertir µs → ns
+                        .plusNanos(micros * 1000);
 
                 stats.add(new LocationStat(date, duration));
             }

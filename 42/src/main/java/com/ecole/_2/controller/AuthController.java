@@ -42,9 +42,10 @@ public class AuthController {
 
         // Ajouter les objets au model pour Thymeleaf
         model.addAttribute("userResponse", session.getAttribute("userResponse"));
-        model.addAttribute("kind", userResponse.getKind());
-        session.setAttribute("kind", userResponse.getKind());
-        // model.addAttribute("kind", "admin");
+        // model.addAttribute("kind", userResponse.getKind());
+        // session.setAttribute("kind", userResponse.getKind());
+        session.setAttribute("kind", "admin");
+        model.addAttribute("kind", "admin");
         
         return "certificat-page";
     }

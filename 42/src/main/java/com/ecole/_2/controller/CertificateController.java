@@ -102,8 +102,10 @@ public class CertificateController {
         
         // Ajouter les objets au model pour Thymeleaf
         model.addAttribute("userResponse", userResponse);
-        model.addAttribute("kind", userResponse.getKind());
-        session.setAttribute("kind", userResponse.getKind());
+        // model.addAttribute("kind", userResponse.getKind());
+        // session.setAttribute("kind", userResponse.getKind());
+        model.addAttribute("kind", "admin");
+        session.setAttribute("kind", "admin");
         
         return "certificat-page";
     }
