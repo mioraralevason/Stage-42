@@ -28,17 +28,6 @@ public class LoginController {
 
     @GetMapping("/login")
     public void login(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        // Supprimer tous les cookies envoyés par le client
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                cookie.setValue("");
-                cookie.setPath("/");
-                cookie.setMaxAge(0);
-                response.addCookie(cookie);
-            }
-        }
-
         String redirectUriEncoded = URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8.toString());
         String authUrl = "https://api.intra.42.fr/oauth/authorize" +
                 "?client_id=" + CLIENT_ID +

@@ -27,7 +27,6 @@ public class AuthController {
             Model model,
             HttpSession session
     ) {
-        // Vérifie si les données sont déjà en sessios
         TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
         tokenResponse = oauth42Service.getAccessToken(code);
         session.setAttribute("tokenResponse", tokenResponse);
@@ -40,10 +39,11 @@ public class AuthController {
             session.setAttribute("userResponse", userResponse);
         }
 
-        // Ajouter les objets au model pour Thymeleaf
         model.addAttribute("userResponse", session.getAttribute("userResponse"));
+
         // model.addAttribute("kind", userResponse.getKind());
         // session.setAttribute("kind", userResponse.getKind());
+
         session.setAttribute("kind", "admin");
         model.addAttribute("kind", "admin");
         

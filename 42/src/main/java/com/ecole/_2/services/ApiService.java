@@ -33,9 +33,6 @@ public class ApiService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     
-    /**
-     * Obtient un token d'accès depuis l'API 42
-     */
     public String getAccessToken() {
         try {
             logger.info("Demande de token d'accès à l'API 42");
@@ -75,9 +72,6 @@ public class ApiService {
         }
     }
     
-    /**
-     * Récupère l'ID utilisateur par login
-     */
     public String getIdUsers(String login, String token) {
         try {
             logger.info("Recherche de l'utilisateur: {}", login);
@@ -95,7 +89,6 @@ public class ApiService {
                 String responseBody = response.getBody();
                 logger.debug("Réponse de recherche utilisateur: {}", responseBody);
                 
-                // Vérifier si la réponse n'est pas vide
                 if (responseBody.trim().isEmpty()) {
                     throw new RuntimeException("Réponse vide de l'API pour l'utilisateur: " + login);
                 }
@@ -122,9 +115,6 @@ public class ApiService {
         }
     }
     
-    /**
-     * Récupère les données utilisateur par ID
-     */
     public Map<String, Object> getUser(String userId, String token) {
         try {
             logger.info("Récupération des données utilisateur: {}", userId);
@@ -140,7 +130,6 @@ public class ApiService {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
                 
-                // Vérifier si la réponse n'est pas vide
                 if (responseBody.trim().isEmpty()) {
                     throw new RuntimeException("Réponse vide de l'API pour l'utilisateur ID: " + userId);
                 }
@@ -162,9 +151,6 @@ public class ApiService {
         }
     }
     
-    /**
-     * Récupère les données de candidature par ID utilisateur
-     */
     public Map<String, Object> getUserCandidature(String userId, String token) {
         try {
             logger.info("Récupération des données de candidature: {}", userId);
@@ -180,7 +166,6 @@ public class ApiService {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
                 
-                // Vérifier si la réponse n'est pas vide
                 if (responseBody.trim().isEmpty()) {
                     throw new RuntimeException("Réponse vide de l'API pour les données de candidature ID: " + userId);
                 }

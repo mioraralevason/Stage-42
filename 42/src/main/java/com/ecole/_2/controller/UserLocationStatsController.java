@@ -9,6 +9,8 @@ import com.ecole._2.services.UserLocationStatsService;
 
 import jakarta.servlet.http.HttpSession;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,7 +39,13 @@ public class UserLocationStatsController {
                 // userId = ((User) session.getAttribute("userResponse")).getId();    
             }else{
                 if(login != null && !login.isEmpty()){
-                    userId = apiService.getIdUsers(login,apiService.getAccessToken());
+                    try {
+                        userId = apiService.getIdUsers(login,apiService.getAccessToken());
+                    }
+                    catch (Exception err) {
+                        model.addAttribute("error", err.getMessage());
+                        return new CertificateController().auth(model, session);
+                    }
                     // userId = "203988";
                 }
             }
@@ -58,6 +66,7 @@ public class UserLocationStatsController {
             freeze.setD(userCursus.getMilestone());
 
             model.addAttribute("freeze", freeze.calculFreeze());
+            model.addAttribute("login", getStringValue(apiService.getUser(userId, apiService.getAccessToken()), "login", ""));
             if (kind.equals("admin")) {
                 model.addAttribute("locationStats", userLocationStat);
                 model.addAttribute("userCursus", userCursus);
@@ -97,6 +106,7 @@ public class UserLocationStatsController {
             freeze.setC(userLocationStat.getTotalHours(userCursus.getBegin_at(), null));
             freeze.setD(userCursus.getMilestone());
 
+            model.addAttribute("login", getStringValue(apiService.getUser(userId, apiService.getAccessToken()), "login", ""));
             model.addAttribute("freeze", freeze.calculFreeze());
             if (kind.equals("admin")) {
                 model.addAttribute("locationStats", userLocationStat);
@@ -107,5 +117,10 @@ public class UserLocationStatsController {
             return new CertificateController().auth(model, session);
         }
         return "freeze-page";
+    }
+    private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
+        if (map == null) return defaultValue;
+        Object value = map.get(key);
+        return (value != null) ? value.toString() : defaultValue;
     }
 }
