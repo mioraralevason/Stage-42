@@ -59,7 +59,7 @@
             button.prop('disabled', true);
             $('#loader').show();
 
-            const url = `/certificate?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}`;
+            const url = `/certificate-generator?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}`;
 
             fetch(url)
                 .then(response => {

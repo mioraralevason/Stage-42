@@ -29,9 +29,16 @@ public class UserLocationStatsController {
 
     @GetMapping("/freeze")
     public String getLocationsStats(@RequestParam("user_id") String userId, HttpSession session, Model model) {
-        userId = ((User) session.getAttribute("userResponse")).getId();
         userId = "211018";
-
+        if(userId == null) {
+            model.addAttribute("error", "User ID is required");
+            return new CertificateController().auth(model, session);
+        }
+        String kind = (String) session.getAttribute("kind");
+        if (kind == null || (!kind.equals("admin"))) {
+            userId = "203988";
+            // userId = ((User) session.getAttribute("userResponse")).getId();
+        }
         try {
             String tokenAdmin = pythonService.getTokenAdminUser();
             CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");

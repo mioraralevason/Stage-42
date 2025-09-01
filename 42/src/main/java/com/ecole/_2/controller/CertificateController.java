@@ -23,38 +23,40 @@ public class CertificateController {
     private CertificateService certificateService;
 
     @GetMapping("/certificate-generator")
-        public String getCertificate(
-                @RequestParam("login") String login,
-                @RequestParam(value = "signer_par", defaultValue = "Aucune") String signerPar,
-                HttpSession session,
-                Model model
+        public ResponseEntity<Resource> getCertificate(
+        @RequestParam("login") String login,
+        @RequestParam(value = "signer_par", defaultValue = "Aucune") String signerPar,
+        HttpSession session,
+        Model model
         ) {
-                User user = null;
-                if (session.getAttribute("userResponse") == null) {
-                    user = (User) session.getAttribute("userResponse");
-                }
-                if (user == null) {
-                        return "redirect:/";
-                }
+        User user = (User) session.getAttribute("userResponse");
+        
+        if (user == null) {
+                return ResponseEntity.status(401).build(); // Unauthorized
+        }
 
-                if (!signerPar.equalsIgnoreCase("Aucune") &&
-                        !signerPar.equalsIgnoreCase("Directeur") &&
-                        !signerPar.equalsIgnoreCase("Assistant")) {
-                        signerPar = "Aucune";
-                }
+        if (!signerPar.equalsIgnoreCase("Aucune") &&
+                !signerPar.equalsIgnoreCase("Directeur") &&
+                !signerPar.equalsIgnoreCase("Assistant")) {
+                signerPar = "Aucune";
+        }
 
-                if (!"admin".equals(session.getAttribute("kind"))) {
-                        login = user.getLogin();
-                }
+        if (!"admin".equals(session.getAttribute("kind"))) {
+                login = user.getLogin();
+        }
 
-                try {
-                        Resource pdf = certificateService.generateCertificate(login, signerPar);
-                        model.addAttribute("pdfResource", pdf);
-                        return "certificat-page"; // page qui affichera ou téléchargera le PDF
-                } catch (Exception e) {
-                        model.addAttribute("error", "Erreur lors de la génération du certificat");
-                        return "certificat-page";
-                }
+        try {
+                Resource pdf = certificateService.generateCertificate(login, signerPar);
+                
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, 
+                        "attachment; filename=\"certificat_scolarite_" + login + ".pdf\"")
+                        .body(pdf);
+                        
+        } catch (Exception e) {
+                return ResponseEntity.status(500).build();
+        }
         }
 
 
