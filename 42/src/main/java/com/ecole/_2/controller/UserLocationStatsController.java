@@ -27,36 +27,85 @@ public class UserLocationStatsController {
     private ApiService apiService;
 
     @GetMapping("/freeze")
-    public String getLocationsStats(@RequestParam("user_id") String userId, HttpSession session, Model model) {
-        userId = "211018";
+    public String getLocationsStats(@RequestParam("login") String login, HttpSession session, Model model) {
+        String userId = null;
+        String kind = null;
         if(userId == null) {
-            model.addAttribute("error", "User ID is required");
-            return new CertificateController().auth(model, session);
-        }
-        String kind = (String) session.getAttribute("kind");
-        if (kind == null || (!kind.equals("admin"))) {
-            userId = "203988";
-            // userId = ((User) session.getAttribute("userResponse")).getId();
+            kind = (String) session.getAttribute("kind");
+            if (kind == null || (!kind.equals("admin"))) {
+                userId = "238414";
+                // userId = ((User) session.getAttribute("userResponse")).getId();    
+            }else{
+                if(login != null && !login.isEmpty()){
+                    userId = apiService.getIdUsers(login,apiService.getAccessToken());
+                    // userId = "203988";
+                }
+            }
+            if(userId == null){
+                model.addAttribute("error", "User Login is required");
+                return new CertificateController().auth(model, session);
+            }
         }
         try {
             String tokenAdmin = apiService.getAccessToken();
             CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
             UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin);
-
-            model.addAttribute("locationStats", userLocationStat);
-            model.addAttribute("userCursus", userCursus);
+            
             Freeze freeze = new Freeze();
             freeze.setA(userLocationStat.getNbDays(userCursus.getBegin_at(),null));
             freeze.setB(userLocationStat.getNbOpenDays(userCursus.getBegin_at(), null));
             freeze.setC(userLocationStat.getTotalHours(userCursus.getBegin_at(), null));
             freeze.setD(userCursus.getMilestone());
+
             model.addAttribute("freeze", freeze.calculFreeze());
+            if (kind.equals("admin")) {
+                model.addAttribute("locationStats", userLocationStat);
+                model.addAttribute("userCursus", userCursus);
+            }
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return new CertificateController().auth(model, session);
         }
+        return "freeze-page";
+    }
 
+    @GetMapping("/freeze-begin")
+    public String getLocationsStats(HttpSession session, Model model) {
+        String userId = null;
+        String kind = null;
+        if(userId == null) {
+            kind = (String) session.getAttribute("kind");
+            if (kind == null || (!kind.equals("admin"))) {
+                userId = "238414";
+                // userId = ((User) session.getAttribute("userResponse")).getId();    
+            }else{
+                userId = "203988";
+            }
+            if(userId == null){
+                model.addAttribute("error", "User Login is required");
+                return new CertificateController().auth(model, session);
+            }
+        }
+        try {
+            String tokenAdmin = apiService.getAccessToken();
+            CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
+            UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin);
+            
+            Freeze freeze = new Freeze();
+            freeze.setA(userLocationStat.getNbDays(userCursus.getBegin_at(),null));
+            freeze.setB(userLocationStat.getNbOpenDays(userCursus.getBegin_at(), null));
+            freeze.setC(userLocationStat.getTotalHours(userCursus.getBegin_at(), null));
+            freeze.setD(userCursus.getMilestone());
 
+            model.addAttribute("freeze", freeze.calculFreeze());
+            if (kind.equals("admin")) {
+                model.addAttribute("locationStats", userLocationStat);
+                model.addAttribute("userCursus", userCursus);
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return new CertificateController().auth(model, session);
+        }
         return "freeze-page";
     }
 }
