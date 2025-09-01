@@ -35,7 +35,7 @@ public class UserLocationStatsController {
         if(userId == null) {
             kind = (String) session.getAttribute("kind");
             if (kind == null || (!kind.equals("admin"))) {
-                userId = "238414";
+                userId = "211018";
                 // userId = ((User) session.getAttribute("userResponse")).getId();    
             }else{
                 if(login != null && !login.isEmpty()){
@@ -85,7 +85,7 @@ public class UserLocationStatsController {
         if(userId == null) {
             kind = (String) session.getAttribute("kind");
             if (kind == null || (!kind.equals("admin"))) {
-                userId = "238414";
+                userId = "211018";
                 // userId = ((User) session.getAttribute("userResponse")).getId();    
             }else{
                 userId = "203988";
