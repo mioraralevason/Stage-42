@@ -67,11 +67,11 @@ def get_user_candidature(user_id: str, token: str = None):
 if __name__ == "__main__":
     try:
         token = get_access_token()
-        print("Access token:", token)
-        login = "aravelom"
+        # print("Access token:", token)
+        login = "rarahari"
         user_id = get_id_users(login)
         print(f"User ID for login {login}: {user_id}")
-        print("User data:", get_user(user_id))
-        print("Candidature data:", get_user_candidature(user_id))
+        # print("User data:", get_user(user_id))
+        # print("Candidature data:", get_user_candidature(user_id))
     except Exception as e:
         print(f"Error: {str(e)}")
