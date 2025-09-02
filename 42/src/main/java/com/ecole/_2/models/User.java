@@ -11,6 +11,8 @@ public class User {
     private String usual_full_name;
     private String kind;
     private Image image;
+    private String pool_month;
+    private String pool_year;
     private List<CursusUser> cursus_users;
 
     // Getters et Setters
@@ -84,5 +86,20 @@ public class User {
 
     public void setCursus_users(List<CursusUser> cursus_users) {
         this.cursus_users = cursus_users;
+    }
+    public String getPool_month() {
+        return pool_month;
+    }
+
+    public void setPool_month(String pool_month) {
+        this.pool_month = pool_month;
+    }
+
+    public String getPool_year() {
+        return pool_year;
+    }
+
+    public void setPool_year(String pool_year) {
+        this.pool_year = pool_year;
     }
 }
