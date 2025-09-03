@@ -1,6 +1,7 @@
 package com.ecole._2.models;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class User {
     private String id;
@@ -101,5 +102,12 @@ public class User {
 
     public void setPool_year(String pool_year) {
         this.pool_year = pool_year;
+    }
+
+    public static List<User> filterUsersByPool(List<User> users, String poolMonth, String poolYear) {
+        return users.stream()
+                .filter(user -> poolMonth.equalsIgnoreCase(user.getPool_month()) 
+                             && poolYear.equalsIgnoreCase(user.getPool_year()))
+                .collect(Collectors.toList());
     }
 }

@@ -26,6 +26,14 @@ public class UserCursusService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
+        // Add 500ms delay before the API call
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted during delay", e);
+        }
+
         ResponseEntity<CursusUser[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -45,6 +53,14 @@ public class UserCursusService {
         headers.set("Authorization", "Bearer " + accessToken);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // Add 500ms delay before the API call
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted during delay", e);
+        }
 
         ResponseEntity<CursusUser[]> response = restTemplate.exchange(
                 url,

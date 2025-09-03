@@ -18,7 +18,7 @@ import java.util.Map;
 @Service
 public class ApiService {
     
-    private static final Logger logger = LoggerFactory.getLogger(ApiService.class);
+    // private static final Logger logger = LoggerFactory.getLogger(ApiService.class);
     
     @Value("${app.client_id}")
     private String uid;
@@ -28,14 +28,14 @@ public class ApiService {
     
     private static final String BASE_URL = "https://api.intra.42.fr";
     private static final String ACCESS_TOKEN_URL = "https://api.intra.42.fr/oauth/token";
-    private static final String USERS_URL = "https://api.intra.42.fr/v2/users";
+    private static final String USERS_URL = "https://api.intra.42.fr/v2/campus/65/users/";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     public String getAccessToken() {
         try {
-            logger.info("Demande de token d'accès à l'API 42");
+            // logger.info("Demande de token d'accès à l'API 42");
             
             MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
             data.add("grant_type", "client_credentials");
@@ -50,7 +50,7 @@ public class ApiService {
             ResponseEntity<String> response = restTemplate.postForEntity(ACCESS_TOKEN_URL, request, String.class);
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                logger.info("Token d'accès obtenu avec succès");
+                // logger.info("Token d'accès obtenu avec succès");
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
                 
                 if (jsonNode.has("access_token")) {
@@ -59,22 +59,22 @@ public class ApiService {
                     throw new RuntimeException("Token d'accès non trouvé dans la réponse");
                 }
             } else {
-                logger.error("Erreur lors de l'obtention du token: {}", response.getStatusCode());
+                // logger.error("Erreur lors de l'obtention du token: {}", response.getStatusCode());
                 throw new RuntimeException("Erreur lors de l'obtention du jeton d'accès: " + response.getStatusCode());
             }
             
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            logger.error("Erreur HTTP lors de l'obtention du token: {}", e.getMessage());
+            // logger.error("Erreur HTTP lors de l'obtention du token: {}", e.getMessage());
             throw new RuntimeException("Erreur d'authentification avec l'API 42: " + e.getStatusCode());
         } catch (Exception e) {
-            logger.error("Erreur lors de l'obtention du token: {}", e.getMessage());
+            // logger.error("Erreur lors de l'obtention du token: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de l'obtention du jeton: " + e.getMessage(), e);
         }
     }
     
     public String getIdUsers(String login, String token) {
         try {
-            logger.info("Recherche de l'utilisateur: {}", login);
+            // logger.info("Recherche de l'utilisateur: {}", login);
             
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
@@ -87,7 +87,7 @@ public class ApiService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
-                logger.debug("Réponse de recherche utilisateur: {}", responseBody);
+                // logger.debug("Réponse de recherche utilisateur: {}", responseBody);
                 
                 if (responseBody.trim().isEmpty()) {
                     throw new RuntimeException("Réponse vide de l'API pour l'utilisateur: " + login);
@@ -96,28 +96,28 @@ public class ApiService {
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
                 if (jsonNode.isArray() && jsonNode.size() > 0) {
                     String userId = jsonNode.get(0).get("id").asText();
-                    logger.info("ID utilisateur trouvé: {} pour login: {}", userId, login);
+                    // logger.info("ID utilisateur trouvé: {} pour login: {}", userId, login);
                     return userId;
                 } else {
                     throw new RuntimeException("Utilisateur non trouvé: " + login);
                 }
             } else {
-                logger.error("Erreur lors de la recherche utilisateur: {}", response.getStatusCode());
+                // logger.error("Erreur lors de la recherche utilisateur: {}", response.getStatusCode());
                 throw new RuntimeException("Erreur lors de la récupération de l'ID utilisateur: " + response.getStatusCode());
             }
             
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            logger.error("Erreur HTTP lors de la recherche utilisateur: {}", e.getMessage());
+            // logger.error("Erreur HTTP lors de la recherche utilisateur: {}", e.getMessage());
             throw new RuntimeException("Erreur API lors de la récupération de l'ID utilisateur: " + e.getStatusCode());
         } catch (Exception e) {
-            logger.error("Erreur lors de la recherche utilisateur: {}", e.getMessage());
+            // logger.error("Erreur lors de la recherche utilisateur: {}", e.getMessage());
             throw new RuntimeException("Erreur API lors de la récupération de l'ID utilisateur: " + e.getMessage(), e);
         }
     }
     
     public Map<String, Object> getUser(String userId, String token) {
         try {
-            logger.info("Récupération des données utilisateur: {}", userId);
+            // logger.info("Récupération des données utilisateur: {}", userId);
             
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
@@ -135,25 +135,25 @@ public class ApiService {
                 }
                 
                 Map<String, Object> userData = objectMapper.readValue(responseBody, Map.class);
-                logger.info("Données utilisateur récupérées avec succès pour ID: {}", userId);
+                // logger.info("Données utilisateur récupérées avec succès pour ID: {}", userId);
                 return userData;
             } else {
-                logger.error("Erreur lors de la récupération utilisateur: {}", response.getStatusCode());
+                // logger.error("Erreur lors de la récupération utilisateur: {}", response.getStatusCode());
                 throw new RuntimeException("Erreur lors de la récupération de l'utilisateur: " + response.getStatusCode());
             }
             
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            logger.error("Erreur HTTP lors de la récupération utilisateur: {}", e.getMessage());
+            // logger.error("Erreur HTTP lors de la récupération utilisateur: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération de l'utilisateur: " + e.getStatusCode());
         } catch (Exception e) {
-            logger.error("Erreur lors de la récupération utilisateur: {}", e.getMessage());
+            // logger.error("Erreur lors de la récupération utilisateur: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération de l'utilisateur: " + e.getMessage(), e);
         }
     }
     
     public Map<String, Object> getUserCandidature(String userId, String token) {
         try {
-            logger.info("Récupération des données de candidature: {}", userId);
+            // logger.info("Récupération des données de candidature: {}", userId);
             
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
@@ -171,18 +171,18 @@ public class ApiService {
                 }
                 
                 Map<String, Object> candidatureData = objectMapper.readValue(responseBody, Map.class);
-                logger.info("Données de candidature récupérées avec succès pour ID: {}", userId);
+                // logger.info("Données de candidature récupérées avec succès pour ID: {}", userId);
                 return candidatureData;
             } else {
-                logger.error("Erreur lors de la récupération candidature: {}", response.getStatusCode());
+                // logger.error("Erreur lors de la récupération candidature: {}", response.getStatusCode());
                 throw new RuntimeException("Erreur lors de la récupération des données de candidature: " + response.getStatusCode());
             }
             
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            logger.error("Erreur HTTP lors de la récupération candidature: {}", e.getMessage());
+            // logger.error("Erreur HTTP lors de la récupération candidature: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération des données de candidature: " + e.getStatusCode());
         } catch (Exception e) {
-            logger.error("Erreur lors de la récupération candidature: {}", e.getMessage());
+            // logger.error("Erreur lors de la récupération candidature: {}", e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération des données de candidature: " + e.getMessage(), e);
         }
     }
