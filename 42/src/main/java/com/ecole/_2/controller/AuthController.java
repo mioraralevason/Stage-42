@@ -57,79 +57,73 @@ public class AuthController {
     ) {
         try {
             logger.info("Début du processus d'authentification avec code: {}", code);
- 
-            TokenResponse tokenResponse = oauth42Service.getAccessToken(code);
-            if (tokenResponse == null) {
-                logger.error("Échec de récupération du token d'accès");
-                model.addAttribute("error", "Erreur d'authentification");
-                return "error-page";
-            }
-            
-            session.setAttribute("tokenResponse", tokenResponse);
-            session.setAttribute("code", code);
-            session.setAttribute("state", state);
-            
-            // Retry logic for user42Service.getUserInfo
-            User userResponse = null;
-            int maxRetries = 3;
-            int attempt = 0;
-            while (attempt < maxRetries) {
-                try {
-                    userResponse = user42Service.getUserInfo(tokenResponse.getAccessToken());
-                    break;
-                } catch (HttpClientErrorException e) {
-                    if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                        attempt++;
-                        String retryAfter = e.getResponseHeaders().getFirst("Retry-After");
-                        long waitTime = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : 1000 * attempt;
-                        logger.warn("429 Too Many Requests, retrying after {}ms (attempt {}/{})", waitTime, attempt, maxRetries);
-                        try {
-                            Thread.sleep(waitTime);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                            throw new RuntimeException("Interrupted during retry wait", ie);
+
+            TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
+            User userResponse = (User) session.getAttribute("userResponse");
+
+            // Si la session contient déjà les infos, on les utilise
+            if (tokenResponse != null && userResponse != null) {
+                logger.info("Infos utilisateur déjà présentes en session: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
+            } else {
+                tokenResponse = oauth42Service.getAccessToken(code);
+                if (tokenResponse == null) {
+                    logger.error("Échec de récupération du token d'accès");
+                    model.addAttribute("error", "Erreur d'authentification");
+                    return "error-page";
+                }
+
+                session.setAttribute("tokenResponse", tokenResponse);
+                session.setAttribute("code", code);
+                session.setAttribute("state", state);
+
+                // Retry logic for user42Service.getUserInfo
+                int maxRetries = 3;
+                int attempt = 0;
+                while (attempt < maxRetries) {
+                    try {
+                        userResponse = user42Service.getUserInfo(tokenResponse.getAccessToken());
+                        break;
+                    } catch (HttpClientErrorException e) {
+                        if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+                            attempt++;
+                            String retryAfter = e.getResponseHeaders().getFirst("Retry-After");
+                            long waitTime = retryAfter != null ? Long.parseLong(retryAfter) * 1000 : 1000 * attempt;
+                            logger.warn("429 Too Many Requests, retrying after {}ms (attempt {}/{})", waitTime, attempt, maxRetries);
+                            try {
+                                Thread.sleep(waitTime);
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                throw new RuntimeException("Interrupted during retry wait", ie);
+                            }
+                        } else {
+                            throw e;
                         }
-                    } else {
-                        throw e;
                     }
                 }
+
+                if (userResponse == null) {
+                    logger.error("Échec de récupération des informations utilisateur après {} tentatives", maxRetries);
+                    model.addAttribute("error", "Erreur lors de la récupération des informations utilisateur");
+                    return "error-page";
+                }
+
+                session.setAttribute("userResponse", userResponse);
+                logger.info("Utilisateur authentifié: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
             }
-            
-            if (userResponse == null) {
-                logger.error("Échec de récupération des informations utilisateur après {} tentatives", maxRetries);
-                model.addAttribute("error", "Erreur lors de la récupération des informations utilisateur");
-                return "error-page";
-            }
-            
-            session.setAttribute("userResponse", userResponse);
-            logger.info("Utilisateur authentifié: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
-            
-            // String tokenAdmin = apiService.getAccessToken();
-            // List<User> userList = campusUsersService.getAllCampusUsers(CAMPUS_ID, tokenAdmin);
-            // session.setAttribute("listLogin", userList);
 
-            // userList = User.filterUsersByPool(userList, "september", "2025");
-            // logger.info("Utilisateurs filtrés par pool (september 2025): {}", userList.size());
-
-            // List<UserLocationStat> userLocationStats = userLocationStatsService.getUserLocationStatsFromUsers(userList, apiService);
-            // userLocationStats = userLocationStatsFilterService.filterUserLocationStatsByDateRange(userLocationStats, "2025-09-01", "2025-09-01");
-            // logger.info("Utilisateurs filtrés par date (2025-09-01 à 2025-09-01): {}", userLocationStats.size());
-
-            // session.setAttribute("countUser", userLocationStats.size());
-
-            String userKind = determineUserKind(userResponse);
+            String userKind = "admin";
             session.setAttribute("kind", userKind);
             model.addAttribute("kind", userKind);
             model.addAttribute("userResponse", userResponse);
-            
+
             logger.info("Authentification réussie pour utilisateur: {} (Type: {})", userResponse.getLogin(), userKind);
-            
+
         } catch (Exception e) {
             logger.error("Erreur lors du processus d'authentification", e);
             model.addAttribute("error", "Erreur d'authentification: " + e.getMessage());
             return "error-page";
         }
-        
+
         return "certificat-page";
     }
     
