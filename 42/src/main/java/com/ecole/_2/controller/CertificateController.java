@@ -26,7 +26,7 @@ public class CertificateController {
     @GetMapping("/certificate-generator")
     public ResponseEntity<?> getCertificate(
             @RequestParam("login") String login,
-            @RequestParam(value = "signer_par", defaultValue = "Aucune") String signerPar,
+            @RequestParam(value = "signer_par", defaultValue = "None") String signerPar,
             HttpSession session,
             Model model
     ) {
@@ -34,16 +34,16 @@ public class CertificateController {
             User user = (User) session.getAttribute("userResponse");
             if (user == null) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Session expirée. Veuillez vous reconnecter.");
+                error.put("error", "Session expired. Please log in again.");
                 return ResponseEntity.status(401)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(error);
             }
             
-            if (!signerPar.equalsIgnoreCase("Aucune") &&
-                !signerPar.equalsIgnoreCase("Directeur") &&
+            if (!signerPar.equalsIgnoreCase("None") &&
+                !signerPar.equalsIgnoreCase("Director") &&
                 !signerPar.equalsIgnoreCase("Assistant")) {
-                signerPar = "Aucune";
+                signerPar = "None";
             }
             
             if (!"admin".equals(session.getAttribute("kind"))) {
@@ -52,7 +52,7 @@ public class CertificateController {
             
             if (login == null || login.trim().isEmpty()) {
                 Map<String, String> error = new HashMap<>();
-                error.put("error", "Login requis pour générer le certificat.");
+                error.put("error", "Login is required to generate the certificate.");
                 return ResponseEntity.status(400)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(error);
@@ -63,26 +63,26 @@ public class CertificateController {
             return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"certificat_scolarite_" + login + ".pdf\"")
+                    "attachment; filename=\"school_certificate_" + login + ".pdf\"")
                 .body(pdf);
                 
         } catch (IllegalArgumentException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Paramètre invalide: " + e.getMessage());
+            error.put("error", "Invalid parameter: " + e.getMessage());
             return ResponseEntity.status(400)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error);
                 
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Erreur lors de la génération: " + e.getMessage());
+            error.put("error", "Error during generation: " + e.getMessage());
             return ResponseEntity.status(500)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error);
                 
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
-            error.put("error", "Erreur interne du serveur. Veuillez réessayer plus tard.");
+            error.put("error", "Internal server error. Please try again later.");
             return ResponseEntity.status(500)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error);

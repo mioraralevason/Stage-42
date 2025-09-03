@@ -56,19 +56,19 @@ public class AuthController {
             HttpSession session
     ) {
         try {
-            logger.info("Début du processus d'authentification avec code: {}", code);
+            logger.info("Starting authentication process with code: {}", code);
 
             TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
             User userResponse = (User) session.getAttribute("userResponse");
 
-            // Si la session contient déjà les infos, on les utilise
+            // If session already contains info, use it
             if (tokenResponse != null && userResponse != null) {
-                logger.info("Infos utilisateur déjà présentes en session: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
+                logger.info("User info already present in session: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
             } else {
                 tokenResponse = oauth42Service.getAccessToken(code);
                 if (tokenResponse == null) {
-                    logger.error("Échec de récupération du token d'accès");
-                    model.addAttribute("error", "Erreur d'authentification");
+                    logger.error("Failed to retrieve access token");
+                    model.addAttribute("error", "Authentication error");
                     return "error-page";
                 }
 
@@ -102,25 +102,25 @@ public class AuthController {
                 }
 
                 if (userResponse == null) {
-                    logger.error("Échec de récupération des informations utilisateur après {} tentatives", maxRetries);
-                    model.addAttribute("error", "Erreur lors de la récupération des informations utilisateur");
+                    logger.error("Failed to retrieve user info after {} attempts", maxRetries);
+                    model.addAttribute("error", "Error retrieving user information");
                     return "error-page";
                 }
 
                 session.setAttribute("userResponse", userResponse);
-                logger.info("Utilisateur authentifié: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
+                logger.info("Authenticated user: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
             }
 
-            String userKind = "admin";
+            String userKind = determineUserKind(userResponse);
             session.setAttribute("kind", userKind);
             model.addAttribute("kind", userKind);
             model.addAttribute("userResponse", userResponse);
 
-            logger.info("Authentification réussie pour utilisateur: {} (Type: {})", userResponse.getLogin(), userKind);
+            logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), userKind);
 
         } catch (Exception e) {
-            logger.error("Erreur lors du processus d'authentification", e);
-            model.addAttribute("error", "Erreur d'authentification: " + e.getMessage());
+            logger.error("Error during authentication process", e);
+            model.addAttribute("error", "Authentication error: " + e.getMessage());
             return "error-page";
         }
 
