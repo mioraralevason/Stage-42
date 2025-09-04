@@ -1,0 +1,12 @@
+Méthode pédagogique : Apprentissage par projets, peer-to-peer, sans cours magistraux.
+
+Durée du tronc commun : Un an et demi maximum.
+
+Freeze : Possibilité de mettre en pause le cursus jusqu'à 3 fois pour une durée totale de 6 mois.
+
+Launchpad : Phase après le tronc commun, permettant de se spécialiser ou de rejoindre le marché du travail.
+
+Fonctionnement du systeme de niveaux:
+Les niveaux sont l’essence même de la progression à 42. La progression est gamifiée et fonctionne par projets. Chaque projet est l’occasion d’aborder une nouvelle notion et apporte une quantité d’expérience déterminée, proportionnelle au travail à fournir, à l’investissement et à la rigueur de l’étudiant vis-à-vis du projet. Le cumul de ces points d’expérience acquis permet de monter en niveau.
+
+Pour connaître le déroulement du cursus, tu peux cliquer sur le lien suivant : https://42antananarivo.mg/le-code-source/lexecution/
