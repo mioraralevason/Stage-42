@@ -1,22 +1,23 @@
 <div th:fragment="freeze" class="dashboard-container">
     <div class="dashboard-header">
         <form action="/freeze" method="get" th:if="${userCursus != null}">
-            <div class="group">
+            <div class="group" style="position: relative;">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
                     <g>
-                    <path
-                        d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"
-                    ></path>
+                        <path
+                            d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"
+                        ></path>
                     </g>
                 </svg>
-
                 <input
                     id="query"
                     class="input"
                     type="search"
                     placeholder="Search..."
                     name="login"
+                    autocomplete="off"
                 />
+                <div id="suggestions" class="suggestions-dropdown" style="display: none;"></div>
             </div>
         </form>
         <h1 class="dashboard-title">Dashboard Cursus <span th:if="${login}" th:text="${login}"></span></h1>
@@ -26,8 +27,8 @@
         <!-- Date de début -->
         <div class="stat-card" th:if="${userCursus != null}">
             <div class="stat-header">
-            <span class="stat-label">Date de début</span>
-            <span class="stat-value" th:text="${userCursus.getFormattedBeginAt()}"></span>
+                <span class="stat-label">Date de début</span>
+                <span class="stat-value" th:text="${userCursus.getFormattedBeginAt()}"></span>
             </div>
         </div>
 
@@ -129,27 +130,102 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const progressBars = document.querySelectorAll('.progress-fill');
+<style>
+    .suggestions-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .suggestion-item {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    .suggestion-item:hover {
+        background: #f0f0f0;
+    }
+</style>
 
-    progressBars.forEach(bar => {
-        const finalWidth = bar.style.width;
-        bar.style.width = '0%';
-        
-        setTimeout(() => {
-            bar.style.width = finalWidth;
-        }, 500);
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Existing progress bar animation
+        const progressBars = document.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            const finalWidth = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = finalWidth;
+            }, 500);
+        });
+
+        // Autocomplete functionality
+        const searchInput = document.getElementById('query');
+        const suggestionsContainer = document.getElementById('suggestions');
+        const logins = /*[[${listLogin}]]*/ []; // Thymeleaf injects listLogin
+
+        if (searchInput && suggestionsContainer && logins.length > 0) {
+            searchInput.addEventListener('input', function() {
+                const value = this.value.toLowerCase().trim();
+                suggestionsContainer.innerHTML = '';
+
+                if (value.length === 0) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                const filteredLogins = logins.filter(login => 
+                    login.toLowerCase().includes(value)
+                );
+
+                if (filteredLogins.length > 0) {
+                    filteredLogins.forEach(login => {
+                        const suggestion = document.createElement('div');
+                        suggestion.className = 'suggestion-item';
+                        suggestion.textContent = login;
+                        suggestion.addEventListener('click', () => {
+                            searchInput.value = login;
+                            suggestionsContainer.innerHTML = '';
+                            suggestionsContainer.style.display = 'none';
+                        });
+                        suggestionsContainer.appendChild(suggestion);
+                    });
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Allow form submission on Enter key
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    suggestionsContainer.style.display = 'none';
+                    searchInput.form.submit();
+                }
+            });
+        }
+
+        // Existing card animation
+        setInterval(() => {
+            const cards = document.querySelectorAll('.stat-card');
+            const randomCard = cards[Math.floor(Math.random() * cards.length)];
+            randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
+            setTimeout(() => {
+                randomCard.style.boxShadow = 'none';
+            }, 1000);
+        }, 3000);
     });
-});
-
-setInterval(() => {
-    const cards = document.querySelectorAll('.stat-card');
-    const randomCard = cards[Math.floor(Math.random() * cards.length)];
-    randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
-    
-    setTimeout(() => {
-        randomCard.style.boxShadow = 'none';
-    }, 1000);
-}, 3000);
 </script>

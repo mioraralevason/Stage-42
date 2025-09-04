@@ -9,7 +9,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.ecole._2.models.TokenResponse;
 
-
 @Service
 public class OAuth42Service {
 
@@ -26,6 +25,14 @@ public class OAuth42Service {
 
     public TokenResponse getAccessToken(String code) {
         RestTemplate restTemplate = new RestTemplate();
+
+        // Add 500ms delay before the API call
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted during delay", e);
+        }
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
@@ -44,5 +51,4 @@ public class OAuth42Service {
 
         return response.getBody();
     }
-
 }
