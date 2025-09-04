@@ -1,0 +1,133 @@
+<div th:fragment="checking" class="contact-card">
+    <form id="checkingForm" method="post" action="/check">
+        
+        <!-- Date Range -->
+        <div class="date-group">
+            <div class="date-input-wrapper">
+                <label for="startDate">Date de début</label>
+                <input type="date" 
+                       class="admin-input date-input" 
+                       name="startDate" 
+                       id="startDate"
+                       th:value="${startDate}" 
+                       required>
+            </div>
+            
+            <div class="date-input-wrapper">
+                <label for="endDate">Date de fin</label>
+                <input type="date" 
+                       class="admin-input date-input" 
+                       name="endDate" 
+                       id="endDate"
+                       th:value="${endDate}" 
+                       required>
+            </div>
+        </div>
+
+        <!-- Pool Selection -->
+        <div class="sel sel--black-panther">
+            <select name="pool" id="pool" required>
+                <option value="">Sélectionner une piscine</option>
+                <option value="September" th:selected="${pool == 'September'}">September</option>
+                <option value="October" th:selected="${pool == 'October'}">October</option>
+                <option value="November" th:selected="${pool == 'November'}">November</option>
+                <option value="December" th:selected="${pool == 'December'}">December</option>
+                <option value="January" th:selected="${pool == 'January'}">January</option>
+                <option value="February" th:selected="${pool == 'February'}">February</option>
+                <option value="March" th:selected="${pool == 'March'}">March</option>
+                <option value="April" th:selected="${pool == 'April'}">April</option>
+                <option value="May" th:selected="${pool == 'May'}">May</option>
+                <option value="June" th:selected="${pool == 'June'}">June</option>
+                <option value="July" th:selected="${pool == 'July'}">July</option>
+                <option value="August" th:selected="${pool == 'August'}">August</option>
+            </select>
+        </div>
+
+        <!-- Year Selection -->
+        <div class="sel sel--black-panther">
+            <select name="year" id="year" required>
+                <option value="">Sélectionner une année</option>
+                <option value="2024" th:selected="${year == '2024'}">2024</option>
+                <option value="2025" th:selected="${year == '2025'}">2025</option>
+                <option value="2026" th:selected="${year == '2026'}">2026</option>
+            </select>
+        </div>
+
+        <button type="submit" class="codepen-button">
+            <span><i class="fa fa-search"></i> VÉRIFIER PRÉSENCES</span>
+        </button>
+
+        <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
+            <div class="spinner"></div>
+            <div style="color:#00ffcc; margin-top:5px;">Vérification en cours...</div>
+        </div>
+    </form>
+
+    <!-- Results Section -->
+    <div class="results-section" th:if="${searchPerformed}">
+        <div class="results-header">
+            <h3><i class="fa fa-bar-chart"></i> Résultats de la vérification</h3>
+        </div>
+        
+        <div class="stats-display">
+            <div class="stat-card main-stat">
+                <div class="stat-number" th:text="${studentCount}">0</div>
+                <div class="stat-label">Étudiants présents</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-info" th:text="${pool}">Pool</div>
+                <div class="stat-label">Piscine</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-info" th:text="${year}">Year</div>
+                <div class="stat-label">Année</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-info" th:text="${startDate + ' - ' + endDate}">Date Range</div>
+                <div class="stat-label">Période</div>
+            </div>
+        </div>
+
+        <!-- Detailed Results Table -->
+        <div class="table-section" th:if="${userLocationStats != null and not #lists.isEmpty(userLocationStats)}">
+            <div class="table-header">
+                <h4><i class="fa fa-list"></i> Détail des présences</h4>
+            </div>
+            
+            <div class="table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fa fa-user"></i> Login</th>
+                            <th><i class="fa fa-id-card"></i> Nom complet</th>
+                            <th><i class="fa fa-map-marker"></i> Localisation</th>
+                            <th><i class="fa fa-clock-o"></i> Dernière présence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="stat : ${userLocationStats}">
+                            <td class="login-cell" th:text="${stat.user.login}">Login</td>
+                            <td th:text="${stat.user.displayname ?: stat.user.firstName + ' ' + stat.user.lastName}">Nom</td>
+                            <td class="location-cell" th:text="${stat.location ?: 'Non spécifié'}">Location</td>
+                            <td class="date-cell">
+                                <span th:if="${stat.lastSeenAt}" th:text="${#temporals.format(stat.lastSeenAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                <span th:unless="${stat.lastSeenAt}" class="no-data">Non disponible</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Results -->
+        <div class="no-results" th:if="${studentCount == 0}">
+            <div class="no-results-icon">
+                <i class="fa fa-info-circle"></i>
+            </div>
+            <p>Aucun étudiant trouvé pour la période sélectionnée.</p>
+        </div>
+    </div>
+</div>
