@@ -108,7 +108,7 @@ public class CheckingController {
                        startDate, endDate, pool, year);
             
             // Récupérer tous les utilisateurs du campus
-            List<User> userList = campusUsersService.getAllCampusUsers(CAMPUS_ID, tokenResponse.getAccessToken());
+            List<User> userList = (List<User>)session.getAttribute("userList");
             logger.info("Retrieved {} users from campus {}", userList.size(), CAMPUS_ID);
             
             // Filtrer par pool et année

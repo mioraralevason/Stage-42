@@ -102,7 +102,7 @@ public class UserLocationStatsService {
                         results.add(stat);
                         success = true;
 
-                        // Pause pour limiter à 2 requêtes par seconde (500ms)
+                        // Pause pour limiter à 8 requêtes par seconde (125ms)
                         Thread.sleep(RATE_LIMIT_DELAY_MS);
 
                     } catch (RestClientException e) {
