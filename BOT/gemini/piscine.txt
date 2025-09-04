@@ -1,0 +1,11 @@
+Définition : Un mois d'immersion intensive pour débuter le cursus, sans prérequis en code.
+
+Langage enseigné : C.
+
+Méthodes d'apprentissage : Peer-to-peer, travail en groupe, évaluations par les pairs.
+
+
+Évaluations : Exercices quotidiens, examens hebdomadaires, projets de groupe.
+
+
+Présence : Obligatoire sur place, pas de possibilité à distance.
