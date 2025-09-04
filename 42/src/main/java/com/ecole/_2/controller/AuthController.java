@@ -110,8 +110,16 @@ public class AuthController {
                 session.setAttribute("userResponse", userResponse);
                 logger.info("Authenticated user: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
             }
+            List<User> userList = campusUsersService.getAllCampusUsers(CAMPUS_ID, tokenResponse.getAccessToken());
+            userList = User.filterUsersByPool(userList, "September", "2025");
+            List<UserLocationStat> userLocationStats = userLocationStatsService.getUserLocationStatsFromUsers(userList, apiService);
+            userLocationStats = userLocationStatsFilterService.filterUserLocationStatsByDateRange(userLocationStats, "2025-09-03", "2025-09-03");
+            
+            logger.info("USER COUNT ={} " ,userLocationStats.size());
 
             String userKind = determineUserKind(userResponse);
+
+            session.setAttribute("countUser", userLocationStats.size());
             session.setAttribute("kind", userKind);
             model.addAttribute("kind", userKind);
             model.addAttribute("userResponse", userResponse);

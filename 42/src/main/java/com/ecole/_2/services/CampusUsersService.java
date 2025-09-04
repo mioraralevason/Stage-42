@@ -112,7 +112,7 @@ public class CampusUsersService {
                     }
                 }
 
-                Thread.sleep(200);
+                Thread.sleep(125);
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -225,7 +225,7 @@ public class CampusUsersService {
                     }
                 }
 
-                Thread.sleep(200);
+                Thread.sleep(125);
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

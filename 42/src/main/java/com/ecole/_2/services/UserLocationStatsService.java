@@ -20,7 +20,7 @@ public class UserLocationStatsService {
     private static final String BASE_URL = "https://api.intra.42.fr/v2/users/";
     private static final int MAX_RETRIES = 5;
     private static final long BASE_RETRY_DELAY_MS = 10000; // 10 sec
-    private static final long RATE_LIMIT_DELAY_MS = 500; // 500ms for 2 requests per second
+    private static final long RATE_LIMIT_DELAY_MS = 125; // 500ms for 2 requests per second
 
     /**
      * Récupère les statistiques de localisation pour un utilisateur spécifique.
@@ -33,7 +33,7 @@ public class UserLocationStatsService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            logger.debug("Fetching location stats for user {}", userId);
+            // logger.debug("Fetching location stats for user {}", userId);
             ResponseEntity<Map> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
@@ -63,7 +63,7 @@ public class UserLocationStatsService {
                 }
             }
 
-            logger.info("Successfully fetched location stats for user {}", userId);
+            // logger.info("Successfully fetched location stats for user {}", userId);
             return new UserLocationStat(userId, stats);
         } catch (RestClientException e) {
             logger.error("Error fetching location stats for user {}: {}", userId, e.getMessage());

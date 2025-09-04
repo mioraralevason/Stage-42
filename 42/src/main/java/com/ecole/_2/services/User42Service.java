@@ -15,7 +15,7 @@ public class User42Service {
 
         // Add 500ms delay before the API call
         try {
-            Thread.sleep(500);
+            Thread.sleep(125);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted during delay", e);
