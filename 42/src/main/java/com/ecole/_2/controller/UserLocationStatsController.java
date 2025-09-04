@@ -54,19 +54,19 @@ public class UserLocationStatsController {
         String userId = null;
         String kind = (String) session.getAttribute("kind");
         
-        logger.info("Traitement freeze - Login: {}, Kind: {}", login, kind);
+        logger.info("Processing freeze - Login: {}, Kind: {}", login, kind);
         
         try {
             
             userId = determineUserId(login, kind, session);
             
             if (userId == null) {
-                logger.error("Impossible de déterminer l'ID utilisateur");
-                model.addAttribute("error", "Impossible de déterminer l'utilisateur");
+                logger.error("Unable to determine user ID");
+                model.addAttribute("error", "Unable to determine user");
                 return new CertificateController().auth(model, session);
             }
             
-            logger.info("ID utilisateur déterminé: {}", userId);
+            logger.info("User ID determined: {}", userId);
             
             
             String tokenAdmin = apiService.getAccessToken();
@@ -92,8 +92,8 @@ public class UserLocationStatsController {
             }
             
         } catch (Exception e) {
-            logger.error("Erreur lors du traitement freeze pour userId: {}", userId, e);
-            model.addAttribute("error", "Erreur lors de la récupération des données: " + e.getMessage());
+            logger.error("Error during freeze processing for userId: {}", userId, e);
+            model.addAttribute("error", "Error retrieving data: " + e.getMessage());
             return new CertificateController().auth(model, session);
         }
         
@@ -101,16 +101,16 @@ public class UserLocationStatsController {
     }
     
     private String determineUserId(String login, String kind, HttpSession session) {
-        logger.info("Détermination de l'ID - Login: {}, Kind: {}", login, kind);
+        logger.info("Determining ID - Login: {}, Kind: {}", login, kind);
         
         
         if (kind == null || !"admin".equals(kind)) {
             User sessionUser = (User) session.getAttribute("userResponse");
             if (sessionUser != null && sessionUser.getId() != null) {
-                logger.info("Utilisation de l'ID de session: {}", sessionUser.getId());
+                logger.info("Using session ID: {}", sessionUser.getId());
                 return sessionUser.getId();
             } else {
-                logger.info("Utilisation de l'ID par défaut: {}", DEFAULT_USER_ID);
+                logger.info("Using default ID: {}", DEFAULT_USER_ID);
                 return DEFAULT_USER_ID;
             }
         }
@@ -121,15 +121,15 @@ public class UserLocationStatsController {
             if (login != null && !login.trim().isEmpty()) {
                 try {
                     String foundUserId = apiService.getIdUsers(login.trim(), apiService.getAccessToken());
-                    logger.info("ID trouvé pour login {}: {}", login, foundUserId);
+                    logger.info("ID found for login {}: {}", login, foundUserId);
                     return foundUserId;
                 } catch (Exception e) {
-                    logger.error("Erreur lors de la recherche de l'ID pour login: {}", login, e);
-                    throw new RuntimeException("Utilisateur non trouvé: " + login);
+                    logger.error("Error searching for ID for login: {}", login, e);
+                    throw new RuntimeException("User not found: " + login);
                 }
             } else {
                 
-                logger.info("Admin sans login spécifié, utilisation de l'ID par défaut admin");
+                logger.info("Admin without specified login, using default admin ID");
                 return "203988"; 
             }
         }
@@ -139,15 +139,15 @@ public class UserLocationStatsController {
     
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
         if (map == null) {
-            logger.warn("Map est null pour la clé: {}", key);
+            logger.warn("Map is null for key: {}", key);
             return defaultValue;
         }
         Object value = map.get(key);
         if (value != null) {
-            logger.debug("Valeur trouvée pour {}: {}", key, value);
+            logger.debug("Value found for {}: {}", key, value);
             return value.toString();
         } else {
-            logger.warn("Valeur null pour la clé: {}", key);
+            logger.warn("Value is null for key: {}", key);
             return defaultValue;
         }
     }

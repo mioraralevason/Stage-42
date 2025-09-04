@@ -13,6 +13,14 @@ public class User42Service {
     public User getUserInfo(String accessToken) {
         RestTemplate restTemplate = new RestTemplate();
 
+        // Add 500ms delay before the API call
+        try {
+            Thread.sleep(125);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted during delay", e);
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
 
