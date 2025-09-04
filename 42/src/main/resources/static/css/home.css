@@ -718,3 +718,114 @@ input[name="login"]::placeholder {
   pointer-events: none;
   z-index: 1;
 }
+
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    position: relative;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.sidebar ul li a:hover {
+    background-color: #444;
+}
+
+.sidebar ul li.has-submenu > .submenu {
+    display: none;
+    background-color: #333;
+}
+
+.sidebar ul li.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.sidebar ul li .submenu li a {
+    padding-left: 40px;
+}
+
+/* ===== Input UserID ===== */
+input[name="userId"] {
+    display: block;
+    width: 300px;
+    max-width: 100%;
+    margin: 0 auto 15px auto;
+    padding: 12px 15px 12px 2.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #00ffcc;
+    background-color: #16171d;
+    border: 2px solid rgba(0, 255, 204, 0.3);
+    border-radius: 12px;
+    outline: none;
+    position: relative;
+    box-shadow: 0 0 0 1.5px #2b2c37, 0 0 25px -17px #000;
+    transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+    text-align: center;
+}
+
+input[name="userId"]::placeholder {
+    color: #888;
+    opacity: 1;
+}
+
+input[name="userId"]:hover {
+    box-shadow: 0 0 0 2.5px #2f303d, 0 0 25px -15px #000;
+}
+
+input[name="userId"]:focus {
+    border-color: #00ffcc;
+    box-shadow: 0 0 0 2.5px #00ffcc, 0 0 25px -15px #000;
+    color: #00fff2;
+    background-color: #1a1a1a;
+    transform: scale(1.02);
+}
+
+/* Icon à gauche (optionnel si tu veux un petit user icon) */
+input[name="userId"] + .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    color: #888;
+    pointer-events: none;
+}
+
+/* Pagination buttons */
+.pagination {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.page-btn {
+    background-color: #16171d;
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    padding: 5px 10px;
+    margin: 0 3px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.page-btn:hover {
+    background-color: #00ffcc;
+    color: #16171d;
+}
+
+.page-btn.active {
+    background-color: #00ffcc;
+    color: #16171d;
+}

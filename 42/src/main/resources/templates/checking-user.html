@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checking User</title>
+
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/checking.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+<div class="container">
+    <div class="hover-area"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <main class="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <!-- Checking User Form and Results -->
+        <div th:fragment="checking-user" class="contact-card">
+
+            <form id="checkingForm" method="post" action="/checkUser">
+                <div class="date-group">
+                    <div class="date-input-wrapper">
+                        <input type="text" name="userId" th:value="${session.userResponse.login}">
+                        <label for="startDate">Date de début</label>
+                        <input type="date" class="user-input date-input" name="startDate" id="startDate" th:value="${startDate}" required>
+                    </div>
+                    <div class="date-input-wrapper">
+                        <label for="endDate">Date de fin</label>
+                        <input type="date" class="user-input date-input" name="endDate" id="endDate" th:value="${endDate}" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="codepen-button">
+                    <span><i class="fa fa-search"></i> VÉRIFIER MA PRÉSENCE</span>
+                </button>
+
+                <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
+                    <div class="spinner"></div>
+                    <div style="color:#00ffcc; margin-top:5px;">Vérification en cours...</div>
+                </div>
+            </form>
+
+            <div class="results-section" th:if="${searchPerformed}">
+                <div class="results-header">
+                    <h3><i class="fa fa-bar-chart"></i> Résultats de la vérification</h3>
+                </div>
+
+                <div class="stats-display">
+                    <div class="stat-card main-stat">
+                        <div class="stat-number" th:text="${dayCount}">0</div>
+                        <div class="stat-label">jour(s) de présence(s)</div>
+                    </div>
+
+
+                    <div class="stat-card">
+                        <div class="stat-info" th:text="${startDate + ' - ' + endDate}">Période</div>
+                        <div class="stat-label">Date Range</div>
+                    </div>
+                </div>
+
+                <div class="table-section" th:if="${userLocationStats != null and not #lists.isEmpty(userLocationStats)}">
+                    <div class="table-header">
+                        <h4><i class="fa fa-list"></i> Détail des présences</h4>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fa fa-user"></i> Login</th>
+                                    <th><i class="fa fa-calendar"></i> Date</th>
+                                    <th><i class="fa fa-clock-o"></i> Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="stat : ${userLocationStats}">
+                                    <td th:text="${stat.userId}">User ID</td>
+                                    <td>
+                                        <div th:each="s : ${stat.stats}" th:text="${s.date}">Date</div>
+                                    </td>
+                                    <td>
+                                        <div th:each="s : ${stat.stats}" th:text="${s.durationStr}">Duration</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="no-results" th:if="${studentCount == 0}">
+                    <div class="no-results-icon">
+                        <i class="fa fa-info-circle"></i>
+                    </div>
+                    <p>Aucun jours trouvé pour la période sélectionnée.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    const $sidebar = $('.sidebar');
+    const $hoverArea = $('.hover-area');
+
+    $hoverArea.on('mouseenter', function() { $sidebar.addClass('visible'); });
+    $sidebar.on('mouseleave', function() { $sidebar.removeClass('visible'); });
+
+    $('#checkingForm').on('submit', function(e) {
+        const startDate = $(this).find('input[name="startDate"]').val();
+        const endDate = $(this).find('input[name="endDate"]').val();
+
+        if (!startDate || !endDate) {
+            alert('Les dates sont requises');
+            e.preventDefault();
+            return;
+        }
+
+        if (new Date(endDate) < new Date(startDate)) {
+            alert('La date de fin doit être postérieure ou égale à la date de début');
+            e.preventDefault();
+            return;
+        }
+
+        $(this).find('button[type="submit"]').prop('disabled', true);
+        $('#loader').show();
+    });
+});
+</script>
+</body>
+</html>

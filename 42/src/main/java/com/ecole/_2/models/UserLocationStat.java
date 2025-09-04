@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class UserLocationStat {
     private String userId;
@@ -101,6 +102,27 @@ public class UserLocationStat {
             }
         }
         return joursOuvrables;
+    }
+
+    public List<LocationStat> filterStatsBetween(String dateDebut, String dateFin) {
+        if (stats == null || stats.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDate debut = (dateDebut != null && !dateDebut.isEmpty())
+                ? LocalDate.parse(extractDatePart(dateDebut), DATE_FORMAT)
+                : stats.stream()
+                    .map(LocationStat::getDate)
+                    .min(Comparator.naturalOrder())
+                    .orElse(LocalDate.now());
+
+        LocalDate fin = (dateFin != null && !dateFin.isEmpty())
+                ? LocalDate.parse(extractDatePart(dateFin), DATE_FORMAT)
+                : LocalDate.now();
+
+        return stats.stream()
+                .filter(s -> !s.getDate().isBefore(debut) && !s.getDate().isAfter(fin))
+                .collect(Collectors.toList());
     }
 
 }

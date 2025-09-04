@@ -1,13 +1,21 @@
 <!-- templates/fragments/sidebar.html -->
 <div th:fragment="sidebar">
-    <!-- Import CSS Sidebar -->
     <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
 
     <aside class="sidebar">
         <ul>
             <li><a th:href="@{/certificate}"><i class="fa fa-home"></i> Certificat Scolarite</a></li>
             <li><a th:href="@{/freeze-begin}"><i class="fa fa-snowflake-o"></i> Freeze</a></li>
-            <li><a th:href="@{/check}"><i class="fa fa-snowflake-o"></i> Checking</a></li>
+
+            <!-- Checking avec sous-menu -->
+            <li class="has-submenu">
+                <a href="#"><i class="fa fa-check-square-o"></i> Checking <i class="fa fa-caret-down"></i></a>
+                <ul class="submenu">
+                    <li><a th:href="@{/check}">Admin</a></li>
+                    <li><a th:href="@{/checkUser}">User</a></li>
+                </ul>
+            </li>
+
         </ul>
     </aside>
 </div>

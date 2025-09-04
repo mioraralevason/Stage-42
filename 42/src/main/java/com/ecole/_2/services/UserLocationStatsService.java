@@ -13,6 +13,9 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.*;
+
+import com.google.common.util.concurrent.RateLimiter;
 
 @Service
 public class UserLocationStatsService {
@@ -20,8 +23,8 @@ public class UserLocationStatsService {
     private static final String BASE_URL = "https://api.intra.42.fr/v2/users/";
     private static final int MAX_RETRIES = 5;
     private static final long BASE_RETRY_DELAY_MS = 10000; // 10 sec
-    private static final long RATE_LIMIT_DELAY_MS = 125; // 500ms for 2 requests per second
-
+    private static final int MAX_PARALLEL = 4;
+    private String accessToken;
     /**
      * Récupère les statistiques de localisation pour un utilisateur spécifique.
      */
@@ -33,7 +36,6 @@ public class UserLocationStatsService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            // logger.debug("Fetching location stats for user {}", userId);
             ResponseEntity<Map> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
@@ -63,7 +65,6 @@ public class UserLocationStatsService {
                 }
             }
 
-            // logger.info("Successfully fetched location stats for user {}", userId);
             return new UserLocationStat(userId, stats);
         } catch (RestClientException e) {
             logger.error("Error fetching location stats for user {}: {}", userId, e.getMessage());
@@ -73,7 +74,7 @@ public class UserLocationStatsService {
 
     /**
      * Récupère les statistiques de localisation pour une liste d'utilisateurs.
-     * Limite à 2 requêtes par seconde.
+     * Exécute en parallèle avec une limite de 8 requêtes/s.
      */
     public List<UserLocationStat> getUserLocationStatsFromUsers(List<User> users, ApiService apiService) {
         if (users == null) {
@@ -81,69 +82,72 @@ public class UserLocationStatsService {
             throw new IllegalArgumentException("User list cannot be null");
         }
 
-        String accessToken = apiService.getAccessToken();
+        accessToken = apiService.getAccessToken();
         if (accessToken == null || accessToken.trim().isEmpty()) {
             logger.error("Access token is null or empty");
             throw new IllegalArgumentException("Access token cannot be null or empty");
         }
 
-        List<UserLocationStat> results = new ArrayList<>();
         logger.info("Starting to fetch location stats for {} users", users.size());
+
+        // RateLimiter : max 8 requêtes par seconde
+        RateLimiter limiter = RateLimiter.create(8.0);
+
+        // Pool de threads pour exécuter les appels en parallèle
+        ExecutorService executor = Executors.newFixedThreadPool(MAX_PARALLEL);
+
+        List<Future<UserLocationStat>> futures = new ArrayList<>();
 
         for (User user : users) {
             if (user != null && user.getId() != null) {
                 String userId = user.getId();
-                boolean success = false;
-                int retries = 0;
 
-                while (!success && retries < MAX_RETRIES) {
-                    try {
-                        UserLocationStat stat = getUserLocationStats(userId, accessToken);
-                        results.add(stat);
-                        success = true;
+                Future<UserLocationStat> future = executor.submit(() -> {
+                    boolean success = false;
+                    int retries = 0;
+                    UserLocationStat result = new UserLocationStat(userId, new ArrayList<>());
 
-                        // Pause pour limiter à 8 requêtes par seconde (125ms)
-                        Thread.sleep(RATE_LIMIT_DELAY_MS);
-
-                    } catch (RestClientException e) {
-                        String message = e.getMessage() != null ? e.getMessage() : "";
-
-                        if (message.contains("429")) {
-                            retries++;
-                            long delay = BASE_RETRY_DELAY_MS * (1L << (retries - 1)); // backoff exponentiel
-                            logger.warn("429 Too Many Requests for user {}. Retry {} in {}s", 
+                    while (!success && retries < MAX_RETRIES) {
+                        try {
+                            limiter.acquire(); // bloque si plus de 8 appels/s
+                            result = getUserLocationStats(userId, accessToken);
+                            success = true;
+                        } catch (RestClientException e) {
+                            String message = e.getMessage() != null ? e.getMessage() : "";
+                            if (message.contains("429")) {
+                                retries++;
+                                long delay = BASE_RETRY_DELAY_MS * (1L << (retries - 1)); // backoff exponentiel
+                                logger.warn("429 Too Many Requests for user {}. Retry {} in {}s",
                                         userId, retries, delay / 1000);
-
-                            try {
                                 Thread.sleep(delay);
-                            } catch (InterruptedException ie) {
-                                Thread.currentThread().interrupt();
-                                logger.error("Interrupted during retry delay for user {}", userId, ie);
-                                throw new IllegalStateException("Interrupted during retry delay", ie);
+                                accessToken = apiService.getAccessToken(); // refresh token
+                            } else {
+                                logger.error("Non-429 error for user {}: {}", userId, e.getMessage());
+                                break;
                             }
-
-                            // Refresh token après un délai
-                            accessToken = apiService.getAccessToken();
-                            if (accessToken == null || accessToken.trim().isEmpty()) {
-                                logger.error("Failed to refresh access token for user {}", userId);
-                                throw new IllegalArgumentException("Failed to refresh access token");
-                            }
-
-                        } else {
-                            logger.error("Non-429 error for user {}: {}", userId, e.getMessage());
-                            break; // Sortir si ce n'est pas une erreur 429
                         }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        logger.error("Interrupted during rate limit pause for user {}", userId, e);
-                        throw new IllegalStateException("Interrupted during rate limit pause", e);
                     }
-                }
+                    return result;
+                });
+
+                futures.add(future);
             } else {
                 logger.warn("Skipping invalid user: {}", user);
             }
         }
 
+        // Récupération des résultats
+        List<UserLocationStat> results = new ArrayList<>();
+        for (Future<UserLocationStat> f : futures) {
+            try {
+                results.add(f.get());
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("Error getting future result: {}", e.getMessage());
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        executor.shutdown();
         logger.info("Completed fetching location stats for {} users", results.size());
         return results;
     }
