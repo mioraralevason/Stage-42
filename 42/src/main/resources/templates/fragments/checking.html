@@ -102,22 +102,15 @@
                     <thead>
                         <tr>
                             <th><i class="fa fa-user"></i> Login</th>
-                            <th><i class="fa fa-id-card"></i> Nom complet</th>
-                            <th><i class="fa fa-map-marker"></i> Localisation</th>
-                            <th><i class="fa fa-clock-o"></i> Dernière présence</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="stat : ${userLocationStats}">
-                            <td class="login-cell" th:text="${stat.user.login}">Login</td>
-                            <td th:text="${stat.user.displayname ?: stat.user.firstName + ' ' + stat.user.lastName}">Nom</td>
-                            <td class="location-cell" th:text="${stat.location ?: 'Non spécifié'}">Location</td>
-                            <td class="date-cell">
-                                <span th:if="${stat.lastSeenAt}" th:text="${#temporals.format(stat.lastSeenAt, 'dd/MM/yyyy HH:mm')}">Date</span>
-                                <span th:unless="${stat.lastSeenAt}" class="no-data">Non disponible</span>
-                            </td>
+                            <!-- Affiche juste l'ID de l'utilisateur -->
+                            <td class="login-cell" th:text="${stat.userId}">User ID</td>
                         </tr>
                     </tbody>
+
                 </table>
             </div>
         </div>
