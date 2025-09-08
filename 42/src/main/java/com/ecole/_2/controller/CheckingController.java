@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,23 +81,34 @@ public class CheckingController {
 
             if (!isValidDateRange(startDate, endDate)) {
                 model.addAttribute("error", "Dates invalides. La date de fin doit être postérieure ou égale à la date de début.");
-                return "checking-page";
+                return "checking-admin"; // Retour au template correct
             }
 
             List<User> userList = (List<User>) session.getAttribute("userList");
+            if (userList == null) {
+                logger.warn("User list is null in session");
+                userList = new ArrayList<>();
+            }
             if (pool != null && !pool.isEmpty() && year != null && !year.isEmpty()) {
                 userList = User.filterUsersByPool(userList, pool, year);
             }
 
-            // Récupération sécurisée des stats utilisateurs
+            // Récupération sécurisée des stats utilisateurs avec leurs noms
             List<UserLocationStat> userLocationStats = new ArrayList<>();
+            String token = apiService.getAccessToken();
             for (User u : userList) {
                 try {
-                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), apiService.getAccessToken());
+                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token);
+                    // Récupérer les données de l'utilisateur pour obtenir le login
+                    Map<String, Object> userData = apiService.getUser(u.getId(), token);
+                    String userName = (String) userData.getOrDefault("login", u.getId()); // Utiliser login, sinon userId
+                    stat.setUserName(userName); // Ajouter le nom à l'objet UserLocationStat
                     userLocationStats.add(stat);
                 } catch (Exception e) {
-                    logger.warn("Could not fetch stats for user {}: {}", u.getId(), e.getMessage());
-                    userLocationStats.add(new UserLocationStat(u.getId(),null)); // stats vides
+                    logger.warn("Could not fetch stats or user data for user {}: {}", u.getId(), e.getMessage());
+                    UserLocationStat stat = new UserLocationStat(u.getId(), null);
+                    stat.setUserName(u.getId()); // Fallback sur userId si erreur
+                    userLocationStats.add(stat);
                 }
             }
 
@@ -155,8 +167,8 @@ public class CheckingController {
     @PostMapping("/checkUser")
     public String checkSingleUser(
             @RequestParam("userId") String userId,
-            @RequestParam("startDate") String startDate,
-            @RequestParam("endDate") String endDate,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate,
             Model model,
             HttpSession session) {
 
@@ -167,18 +179,24 @@ public class CheckingController {
 
             if (!isValidDateRange(startDate, endDate)) {
                 model.addAttribute("error", "Dates invalides.");
-                return "checking-page";
+                return "checking-user"; // Retour au template correct
             }
 
             UserLocationStat userStat;
-            userId = apiService.getIdUsers(userId, apiService.getAccessToken());
+            String token = apiService.getAccessToken();
+            userId = apiService.getIdUsers(userId, token);
             try {
-                userStat = userLocationStatsService.getUserLocationStats(userId, apiService.getAccessToken());
+                userStat = userLocationStatsService.getUserLocationStats(userId, token);
+                // Récupérer les données de l'utilisateur pour obtenir le login
+                Map<String, Object> userData = apiService.getUser(userId, token);
+                String userName = (String) userData.getOrDefault("login", userId); // Utiliser login, sinon userId
+                userStat.setUserName(userName); // Ajouter le nom à l'objet UserLocationStat
                 List<LocationStat> locationStats = userStat.filterStatsBetween(startDate, endDate);
                 userStat.setStats(locationStats);
             } catch (Exception e) {
-                logger.warn("Could not fetch stats for user {}: {}", userId, e.getMessage());
-                userStat = new UserLocationStat(userId,null); // stats vides
+                logger.warn("Could not fetch stats or user data for user {}: {}", userId, e.getMessage());
+                userStat = new UserLocationStat(userId, null);
+                userStat.setUserName(userId); // Fallback sur userId si erreur
             }
 
             model.addAttribute("userResponse", userResponse);

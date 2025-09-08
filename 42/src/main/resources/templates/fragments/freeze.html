@@ -1,11 +1,31 @@
 <div th:fragment="freeze" class="dashboard-container">
     <div class="dashboard-header">
-        <h1 class="dashboard-title">Dashboard Cursus</h1>
+        <form action="/freeze" method="get" th:if="${userCursus != null}">
+            <div class="group" style="position: relative;">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
+                    <g>
+                        <path
+                            d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"
+                        ></path>
+                    </g>
+                </svg>
+                <input
+                    id="query"
+                    class="input"
+                    type="search"
+                    placeholder="Search..."
+                    name="login"
+                    autocomplete="off"
+                />
+                <div id="suggestions" class="suggestions-dropdown" style="display: none;"></div>
+            </div>
+        </form>
+        <h1 class="dashboard-title">Dashboard Cursus <span th:if="${login}" th:text="${login}"></span></h1>
     </div>
 
     <div class="stats-grid">
         <!-- Date de début -->
-        <div class="stat-card">
+        <div class="stat-card" th:if="${userCursus != null}">
             <div class="stat-header">
                 <span class="stat-label">Start Date</span>
                 <span class="stat-value" th:text="${userCursus.getFormattedBeginAt()}"></span>
@@ -13,65 +33,18 @@
         </div>
 
         <!-- Nombre de jours total -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Total Days</span>
-                <span class="stat-value" th:text="${locationStats.getNbDays(userCursus.getBegin_at(), null)}"></span>
-            </div>
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" 
-                         th:style="'width: ' + ${(locationStats.getNbDays(userCursus.getBegin_at(), null) / 365.0) * 100} + '%'"></div>
-                </div>
-                <div class="progress-text">
-                    <span class="progress-current" th:text="${locationStats.getNbDays(userCursus.getBegin_at(), null)} + ' jours'"></span>
-                    <span class="progress-total">/ 365 Days</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Jours ouvrables -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Working days</span>
-                <span class="stat-value" th:text="${#numbers.formatInteger(locationStats.getNbOpenDays(userCursus.getBegin_at(), null), 0)}"></span>
-            </div>
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" 
-                         th:style="'width: ' + ${(locationStats.getNbOpenDays(userCursus.getBegin_at(), null) / 250.0) * 100} + '%'"></div>
-                </div>
-                <div class="progress-text">
-                    <span class="progress-current" th:text="${locationStats.getNbOpenDays(userCursus.getBegin_at(), null)} + ' jours'"></span>
-                    <span class="progress-total">/ 250 Days</span>
-                </div>
-            </div>
-        </div>
+        
+        
 
         <!-- Total d'heures -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Total  Hours</span>
-                 <span class="stat-value" th:text="${#numbers.formatInteger(locationStats.getTotalHours(userCursus.getBegin_at(), null), 0)} + 'h'"></span>
-            </div>
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" 
-                         th:style="'width: ' + ${(locationStats.getTotalHours(userCursus.getBegin_at(), null) / 1700.0) * 100} + '%'"></div>
-                </div>
-                <div class="progress-text">
-                    <span class="progress-current" th:text="${#numbers.formatInteger(locationStats.getTotalHours(userCursus.getBegin_at(), null), 0)} + 'h'"></span>
-                    <span class="progress-total">/ 1,700h</span>
-                </div>
-            </div>
-        </div>
+        
     </div>
 
     <!-- Section Milestone -->
-    <div class="milestone-section">
+    <div class="milestone-section" th:if="${userCursus != null}">
         <div class="milestone-content">
             <div class="milestone-header">
-                <h2 class="milestone-title">Actual Milestone</h2>
+                <h2 class="milestone-title"> Actual Milestone</h2>
             </div>
             <div class="milestone-value" th:text="${userCursus.getMilestone()}"></div>
             
@@ -90,10 +63,10 @@
     </div>
 
     <!-- Jours de Freeze -->
-    <div class="stat-card freeze-card" style="margin-top: 20px;">
+    <div class="stat-card freeze-card" style="margin-top: 20px;" th:if="${freeze != null}">
         <div class="stat-header">
             <i class="fas fa-snowflake stat-icon"></i>
-            <span class="stat-label">freeze Days</span>
+            <span class="stat-label">Freeze days</span>
             <span class="stat-value" th:text="${#numbers.formatInteger(freeze, 0)} + ' jours'"></span>
         </div>
         <div class="progress-container">
@@ -110,27 +83,102 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const progressBars = document.querySelectorAll('.progress-fill');
+<style>
+    .suggestions-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .suggestion-item {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    .suggestion-item:hover {
+        background: #f0f0f0;
+    }
+</style>
 
-    progressBars.forEach(bar => {
-        const finalWidth = bar.style.width;
-        bar.style.width = '0%';
-        
-        setTimeout(() => {
-            bar.style.width = finalWidth;
-        }, 500);
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Existing progress bar animation
+        const progressBars = document.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            const finalWidth = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = finalWidth;
+            }, 500);
+        });
+
+        // Autocomplete functionality
+        const searchInput = document.getElementById('query');
+        const suggestionsContainer = document.getElementById('suggestions');
+        const logins = /*[[${listLogin}]]*/ []; // Thymeleaf injects listLogin
+
+        if (searchInput && suggestionsContainer && logins.length > 0) {
+            searchInput.addEventListener('input', function() {
+                const value = this.value.toLowerCase().trim();
+                suggestionsContainer.innerHTML = '';
+
+                if (value.length === 0) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                const filteredLogins = logins.filter(login => 
+                    login.toLowerCase().includes(value)
+                );
+
+                if (filteredLogins.length > 0) {
+                    filteredLogins.forEach(login => {
+                        const suggestion = document.createElement('div');
+                        suggestion.className = 'suggestion-item';
+                        suggestion.textContent = login;
+                        suggestion.addEventListener('click', () => {
+                            searchInput.value = login;
+                            suggestionsContainer.innerHTML = '';
+                            suggestionsContainer.style.display = 'none';
+                        });
+                        suggestionsContainer.appendChild(suggestion);
+                    });
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Allow form submission on Enter key
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    suggestionsContainer.style.display = 'none';
+                    searchInput.form.submit();
+                }
+            });
+        }
+
+        // Existing card animation
+        setInterval(() => {
+            const cards = document.querySelectorAll('.stat-card');
+            const randomCard = cards[Math.floor(Math.random() * cards.length)];
+            randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
+            setTimeout(() => {
+                randomCard.style.boxShadow = 'none';
+            }, 1000);
+        }, 3000);
     });
-});
-
-setInterval(() => {
-    const cards = document.querySelectorAll('.stat-card');
-    const randomCard = cards[Math.floor(Math.random() * cards.length)];
-    randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
-    
-    setTimeout(() => {
-        randomCard.style.boxShadow = 'none';
-    }, 1000);
-}, 3000);
 </script>
