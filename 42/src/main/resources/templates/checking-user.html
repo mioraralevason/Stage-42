@@ -25,34 +25,34 @@
                 <div class="date-group">
                     <div class="date-input-wrapper">
                         <input type="text" name="userId" th:value="${session.userResponse.login}">
-                        <label for="startDate">Date de début</label>
+                        <label for="startDate">Start Date</label>
                         <input type="date" class="user-input date-input" name="startDate" id="startDate" th:value="${startDate}" required>
                     </div>
                     <div class="date-input-wrapper">
-                        <label for="endDate">Date de fin</label>
+                        <label for="endDate">End Date</label>
                         <input type="date" class="user-input date-input" name="endDate" id="endDate" th:value="${endDate}" required>
                     </div>
                 </div>
 
                 <button type="submit" class="codepen-button">
-                    <span><i class="fa fa-search"></i> VÉRIFIER MA PRÉSENCE</span>
+                    <span><i class="fa fa-search"></i> Checking Attendance</span>
                 </button>
 
                 <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
                     <div class="spinner"></div>
-                    <div style="color:#00ffcc; margin-top:5px;">Vérification en cours...</div>
+                    <div style="color:#00ffcc; margin-top:5px;">Cheking in progress...</div>
                 </div>
             </form>
 
             <div class="results-section" th:if="${searchPerformed}">
                 <div class="results-header">
-                    <h3><i class="fa fa-bar-chart"></i> Résultats de la vérification</h3>
+                    <h3><i class="fa fa-bar-chart"></i> Verification results</h3>
                 </div>
 
                 <div class="stats-display">
                     <div class="stat-card main-stat">
                         <div class="stat-number" th:text="${dayCount}">0</div>
-                        <div class="stat-label">jour(s) de présence(s)</div>
+                        <div class="stat-label">Day(s)of attendance</div>
                     </div>
 
 
@@ -64,14 +64,14 @@
 
                 <div class="table-section" th:if="${userLocationStats != null and not #lists.isEmpty(userLocationStats)}">
                     <div class="table-header">
-                        <h4><i class="fa fa-list"></i> Détail des présences</h4>
+                        <h4><i class="fa fa-list"></i> Attendance details</h4>
                     </div>
 
                     <div class="table-container">
                         <table class="results-table">
                             <thead>
                                 <tr>
-                                    <th><i class="fa fa-user"></i> Login</th>
+                                    <th><i class="fa fa-user"></i> Id Student</th>
                                     <th><i class="fa fa-calendar"></i> Date</th>
                                     <th><i class="fa fa-clock-o"></i> Duration</th>
                                 </tr>
@@ -95,7 +95,7 @@
                     <div class="no-results-icon">
                         <i class="fa fa-info-circle"></i>
                     </div>
-                    <p>Aucun jours trouvé pour la période sélectionnée.</p>
+                    <p>No days found for the selected period.</p>
                 </div>
             </div>
 

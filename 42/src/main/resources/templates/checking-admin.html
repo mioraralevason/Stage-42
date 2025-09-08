@@ -26,12 +26,12 @@
             <form id="checkingForm" method="post" action="/check">
                 <div class="date-group">
                     <div class="date-input-wrapper">
-                        <label for="startDate">Date de début</label>
+                        <label for="startDate">Start Date</label>
                         <input type="date" class="admin-input date-input" name="startDate" id="startDate"
                                th:value="${startDate}" required>
                     </div>
                     <div class="date-input-wrapper">
-                        <label for="endDate">Date de fin</label>
+                        <label for="endDate">End Date</label>
                         <input type="date" class="admin-input date-input" name="endDate" id="endDate"
                                th:value="${endDate}" required>
                     </div>
@@ -39,7 +39,7 @@
 
                 <div class="sel sel--black-panther">
                     <select name="pool" id="pool">
-                        <option value="">Sélectionner une piscine</option>
+                        <option value="">Select Pool Month</option>
                         <option value="September" th:selected="${pool == 'September'}">September</option>
                         <option value="October" th:selected="${pool == 'October'}">October</option>
                         <option value="November" th:selected="${pool == 'November'}">November</option>
@@ -55,63 +55,63 @@
                     </select>
                 </div>
 
-                <div class="sel sel--black-panther">
+               <div class="sel sel--black-panther">
                     <select name="year" id="year">
-                        <option value="">Sélectionner une année</option>
-                        <option value="2024" th:selected="${year == '2024'}">2024</option>
-                        <option value="2025" th:selected="${year == '2025'}">2025</option>
-                        <option value="2026" th:selected="${year == '2026'}">2026</option>
+                        <option value="">Select Year</option>
                     </select>
                 </div>
 
+
+
+
                 <button type="submit" class="codepen-button">
-                    <span><i class="fa fa-search"></i> VÉRIFIER PRÉSENCES</span>
+                    <span><i class="fa fa-search"></i> Check Attendance</span>
                 </button>
 
                 <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
                     <div class="spinner"></div>
-                    <div style="color:#00ffcc; margin-top:5px;">Vérification en cours...</div>
+                    <div style="color:#00ffcc; margin-top:5px;">Verification in progress...</div>
                 </div>
             </form>
 
             <!-- Results Section -->
             <div class="results-section" th:if="${searchPerformed}">
                 <div class="results-header">
-                    <h3><i class="fa fa-bar-chart"></i> Résultats de la vérification</h3>
+                    <h3><i class="fa fa-bar-chart"></i> Verification Results</h3>
                 </div>
 
                 <div class="stats-display">
                     <div class="stat-card main-stat">
                         <div class="stat-number" th:text="${studentCount}">0</div>
-                        <div class="stat-label">Étudiants présents</div>
+                        <div class="stat-label">Present Student</div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-info" th:text="${pool}">Pool</div>
-                        <div class="stat-label">Piscine</div>
+                        <div class="stat-label">Pool</div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-info" th:text="${year}">Year</div>
-                        <div class="stat-label">Année</div>
+                        <div class="stat-label">Year</div>
                     </div>
 
                     <div class="stat-card">
-                        <div class="stat-info" th:text="${startDate + ' - ' + endDate}">Période</div>
+                        <div class="stat-info" th:text="${startDate + ' - ' + endDate}">Period</div>
                         <div class="stat-label">Date Range</div>
                     </div>
                 </div>
 
                 <div class="table-section" th:if="${userLocationStats != null and not #lists.isEmpty(userLocationStats)}">
                     <div class="table-header">
-                        <h4><i class="fa fa-list"></i> Détail des présences</h4>
+                        <h4><i class="fa fa-list"></i> Attendance details</h4>
                     </div>
 
                     <div class="table-container">
                         <table class="results-table">
                             <thead>
                                 <tr>
-                                    <th><i class="fa fa-user"></i> Login</th>
+                                    <th><i class="fa fa-user"></i> Id Student</th>
                                     <th><i class="fa fa-calendar"></i> Date</th>
                                     <th><i class="fa fa-clock-o"></i> Duration</th>
                                 </tr>
@@ -135,7 +135,7 @@
                     <div class="no-results-icon">
                         <i class="fa fa-info-circle"></i>
                     </div>
-                    <p>Aucun étudiant trouvé pour la période sélectionnée.</p>
+                    <p>No days found for the selected period.</p>
                 </div>
             </div>
         </div>
@@ -198,6 +198,21 @@ $(document).ready(function() {
         $currentSel.children('select').prop('selectedIndex', index + 1);
     });
 });
+</script>
+
+<script>
+    const selectYear = document.getElementById("year");
+    for (let year = 2000; year <= 2030; year++) {
+        let option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+
+        if (year === new Date().getFullYear()) {
+            option.selected = true;
+        }
+
+        selectYear.appendChild(option);
+    }
 </script>
 </body>
 </html>
