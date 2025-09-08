@@ -110,13 +110,16 @@ public class AuthController {
                 session.setAttribute("userResponse", userResponse);
                 logger.info("Authenticated user: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
             }
+            List<User> userList = campusUsersService.getAllCampusUsers(CAMPUS_ID, tokenResponse.getAccessToken());
 
-            String userKind = determineUserKind(userResponse);
-            session.setAttribute("kind", userKind);
-            model.addAttribute("kind", userKind);
+            // String userKind = determineUserKind(userResponse);
+
+            session.setAttribute("userList", userList);
+            session.setAttribute("kind", "admin");
+            model.addAttribute("kind", "admin");
             model.addAttribute("userResponse", userResponse);
 
-            logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), userKind);
+            logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), "admin");
 
         } catch (Exception e) {
             logger.error("Error during authentication process", e);

@@ -1,16 +1,16 @@
 package com.ecole._2.services;
 
 import com.ecole._2.models.User;
+import com.google.common.util.concurrent.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 @Service
 public class CampusUsersService {
@@ -19,24 +19,19 @@ public class CampusUsersService {
     private static final int DEFAULT_PAGE_SIZE = 30;
     private static final int MAX_PAGE_SIZE = 100;
 
-    /**
-     * Retrieves campus users with pagination.
-     *
-     * @param campusId Campus ID
-     * @param accessToken 42 API access token
-     * @param pageNumber Page number (optional, default 1)
-     * @param pageSize Page size (optional, default 30, max 100)
-     * @return List of campus users for the specified page
-     * @throws IllegalArgumentException if parameters are invalid
-     * @throws RuntimeException if API call fails
-     */
-    public List<User> getCampusUsers(String campusId, String accessToken, Integer pageNumber, Integer pageSize)
-            throws IllegalArgumentException, RuntimeException {
+    // ✅ Limiteur global → 8 requêtes / seconde
+    private final RateLimiter rateLimiter = RateLimiter.create(8.0);
 
+    // ✅ Pool de 8 threads (aligné avec la limite API)
+    private final ExecutorService executor = Executors.newFixedThreadPool(8);
+
+    /**
+     * Récupère une page de users
+     */
+    public List<User> getCampusUsers(String campusId, String accessToken, Integer pageNumber, Integer pageSize) {
         if (campusId == null || campusId.trim().isEmpty()) {
             throw new IllegalArgumentException("Campus ID cannot be null or empty");
         }
-
         if (accessToken == null || accessToken.trim().isEmpty()) {
             throw new IllegalArgumentException("Access token cannot be null or empty");
         }
@@ -52,6 +47,8 @@ public class CampusUsersService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
+            rateLimiter.acquire(); // ✅ applique la limite avant chaque requête
+
             ResponseEntity<User[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -63,90 +60,78 @@ public class CampusUsersService {
             return users != null ? Arrays.asList(users) : new ArrayList<>();
 
         } catch (RestClientException e) {
-            throw new RuntimeException("Error fetching users for campus " + campusId + " from API: " + e.getMessage(), e);
+            throw new RuntimeException("Error fetching users for campus " + campusId + " page " + page + ": " + e.getMessage(), e);
         }
     }
 
     /**
-     * Retrieves ALL users from a campus from page 1 to the end.
-     *
-     * @param campusId Campus ID
-     * @param accessToken 42 API access token
-     * @return Complete list of ALL campus users
-     * @throws IllegalArgumentException if parameters are invalid
-     * @throws RuntimeException if API call fails
+     * Récupère TOUS les users d’un campus (multi-threadé avec 8 workers)
      */
-    public List<User> getAllCampusUsers(String campusId, String accessToken)
-            throws IllegalArgumentException, RuntimeException {
-
-        if (campusId == null || campusId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Campus ID cannot be null or empty");
-        }
-
-        if (accessToken == null || accessToken.trim().isEmpty()) {
-            throw new IllegalArgumentException("Access token cannot be null or empty");
-        }
-
+    public List<User> getAllCampusUsers(String campusId, String accessToken) {
         List<User> allUsers = new ArrayList<>();
         int currentPage = 1;
         boolean hasMorePages = true;
 
+        List<Future<List<User>>> futures = new ArrayList<>();
+
         while (hasMorePages) {
-            try {
-                logger.debug("Fetching users for campus {}, page: {}", campusId, currentPage);
-                List<User> pageUsers = getCampusUsers(campusId, accessToken, currentPage, MAX_PAGE_SIZE);
+            final int page = currentPage;
+            futures.add(executor.submit(() -> getCampusUsers(campusId, accessToken, page, MAX_PAGE_SIZE)));
 
-                if (pageUsers.isEmpty()) {
-                    hasMorePages = false;
-                    logger.info("No more users found for campus {}. Total pages fetched: {}", campusId, currentPage - 1);
-                } else {
-                    allUsers.addAll(pageUsers);
-                    logger.debug("Fetched {} users from page {}. Total users for campus {} so far: {}",
-                                pageUsers.size(), currentPage, campusId, allUsers.size());
+            currentPage++;
 
-                    if (pageUsers.size() < MAX_PAGE_SIZE) {
-                        hasMorePages = false;
-                        logger.info("Last page reached for campus {}. Total users: {}", campusId, allUsers.size());
-                    } else {
-                        currentPage++;
-                    }
-                }
-
-                Thread.sleep(200);
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Thread interrupted while fetching users for campus " + campusId, e);
-            } catch (Exception e) {
-                throw new RuntimeException("Error fetching users for campus " + campusId + ", page " + currentPage + ": " + e.getMessage(), e);
+            // ✅ limiter la taille des batchs (évite un burst trop gros)
+            if (futures.size() >= 8) { 
+                hasMorePages = processFutures(futures, allUsers);
+                futures.clear();
             }
         }
+
+        // ✅ traiter la dernière batch
+        processFutures(futures, allUsers);
 
         logger.info("Finished fetching all users for campus {}. Total: {}", campusId, allUsers.size());
         return allUsers;
     }
 
     /**
-     * Retrieves campus users with additional filters.
-     *
-     * @param campusId Campus ID
-     * @param accessToken 42 API access token
-     * @param pageNumber Page number (optional)
-     * @param pageSize Page size (optional)
-     * @param filterKey Filter key (e.g., "active", "staff", etc.)
-     * @param filterValue Filter value
-     * @return List of filtered campus users
-     * @throws IllegalArgumentException if parameters are invalid
-     * @throws RuntimeException if API call fails
+     * Récupère tous les users actifs (pareil que ci-dessus mais avec filtre)
+     */
+    public List<User> getAllActiveCampusUsers(String campusId, String accessToken) {
+        List<User> allActiveUsers = new ArrayList<>();
+        int currentPage = 1;
+        boolean hasMorePages = true;
+
+        List<Future<List<User>>> futures = new ArrayList<>();
+
+        while (hasMorePages) {
+            final int page = currentPage;
+            futures.add(executor.submit(() ->
+                getCampusUsersWithFilter(campusId, accessToken, page, MAX_PAGE_SIZE, "active", "true")
+            ));
+
+            currentPage++;
+
+            if (futures.size() >= 8) { // ✅ batch = 8 max
+                hasMorePages = processFutures(futures, allActiveUsers);
+                futures.clear();
+            }
+        }
+
+        processFutures(futures, allActiveUsers);
+
+        logger.info("Finished fetching all active users for campus {}. Total: {}", campusId, allActiveUsers.size());
+        return allActiveUsers;
+    }
+
+    /**
+     * Récupération users avec filtres
      */
     public List<User> getCampusUsersWithFilter(String campusId, String accessToken, Integer pageNumber,
-                                              Integer pageSize, String filterKey, String filterValue)
-            throws IllegalArgumentException, RuntimeException {
-
+                                               Integer pageSize, String filterKey, String filterValue) {
         if (campusId == null || campusId.trim().isEmpty()) {
             throw new IllegalArgumentException("Campus ID cannot be null or empty");
         }
-
         if (accessToken == null || accessToken.trim().isEmpty()) {
             throw new IllegalArgumentException("Access token cannot be null or empty");
         }
@@ -167,6 +152,8 @@ public class CampusUsersService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
+            rateLimiter.acquire();
+
             ResponseEntity<User[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -178,64 +165,26 @@ public class CampusUsersService {
             return users != null ? Arrays.asList(users) : new ArrayList<>();
 
         } catch (RestClientException e) {
-            throw new RuntimeException("Error fetching filtered users for campus " + campusId + " from API: " + e.getMessage(), e);
+            throw new RuntimeException("Error fetching filtered users for campus " + campusId + " page " + page + ": " + e.getMessage(), e);
         }
     }
 
     /**
-     * Retrieves ALL active users from a campus.
-     *
-     * @param campusId Campus ID
-     * @param accessToken 42 API access token
-     * @return Complete list of all active campus users
+     * Récupère les résultats des futures et détermine s’il reste des pages
      */
-    public List<User> getAllActiveCampusUsers(String campusId, String accessToken)
-            throws IllegalArgumentException, RuntimeException {
-
-        if (campusId == null || campusId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Campus ID cannot be null or empty");
-        }
-
-        if (accessToken == null || accessToken.trim().isEmpty()) {
-            throw new IllegalArgumentException("Access token cannot be null or empty");
-        }
-
-        List<User> allActiveUsers = new ArrayList<>();
-        int currentPage = 1;
-        boolean hasMorePages = true;
-
-        while (hasMorePages) {
+    private boolean processFutures(List<Future<List<User>>> futures, List<User> accumulator) {
+        boolean hasMore = true;
+        for (Future<List<User>> f : futures) {
             try {
-                logger.debug("Fetching active users for campus {}, page: {}", campusId, currentPage);
-                List<User> pageUsers = getCampusUsersWithFilter(campusId, accessToken, currentPage, MAX_PAGE_SIZE, "active", "true");
-
-                if (pageUsers.isEmpty()) {
-                    hasMorePages = false;
-                    logger.info("No more active users found for campus {}. Total pages fetched: {}", campusId, currentPage - 1);
-                } else {
-                    allActiveUsers.addAll(pageUsers);
-                    logger.debug("Fetched {} active users from page {}. Total active users for campus {} so far: {}",
-                                pageUsers.size(), currentPage, campusId, allActiveUsers.size());
-
-                    if (pageUsers.size() < MAX_PAGE_SIZE) {
-                        hasMorePages = false;
-                        logger.info("Last page reached for campus {}. Total active users: {}", campusId, allActiveUsers.size());
-                    } else {
-                        currentPage++;
-                    }
+                List<User> pageUsers = f.get();
+                if (pageUsers.isEmpty() || pageUsers.size() < MAX_PAGE_SIZE) {
+                    hasMore = false;
                 }
-
-                Thread.sleep(200);
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Thread interrupted while fetching active users for campus " + campusId, e);
+                accumulator.addAll(pageUsers);
             } catch (Exception e) {
-                throw new RuntimeException("Error fetching active users for campus " + campusId + ", page " + currentPage + ": " + e.getMessage(), e);
+                logger.error("Error fetching page: {}", e.getMessage(), e);
             }
         }
-
-        logger.info("Finished fetching all active users for campus {}. Total: {}", campusId, allActiveUsers.size());
-        return allActiveUsers;
+        return hasMore;
     }
 }
