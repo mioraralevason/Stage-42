@@ -98,7 +98,7 @@ public class CheckingController {
             String token = apiService.getAccessToken();
             for (User u : userList) {
                 try {
-                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token);
+                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token,startDate,endDate);
                     // Récupérer les données de l'utilisateur pour obtenir le login
                     Map<String, Object> userData = apiService.getUser(u.getId(), token);
                     String userName = (String) userData.getOrDefault("login", u.getId()); // Utiliser login, sinon userId
@@ -186,7 +186,7 @@ public class CheckingController {
             String token = apiService.getAccessToken();
             userId = apiService.getIdUsers(userId, token);
             try {
-                userStat = userLocationStatsService.getUserLocationStats(userId, token);
+                userStat = userLocationStatsService.getUserLocationStats(userId, token,startDate,endDate);
                 // Récupérer les données de l'utilisateur pour obtenir le login
                 Map<String, Object> userData = apiService.getUser(userId, token);
                 String userName = (String) userData.getOrDefault("login", userId); // Utiliser login, sinon userId

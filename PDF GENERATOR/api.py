@@ -67,7 +67,7 @@ def get_user_candidature(user_id: str, token: str = None):
 if __name__ == "__main__":
     try:
         token = get_access_token()
-        # print("Access token:", token)
+        print("Access token:", token)
         login = "juramaha"
         user_id = get_id_users(login)
         print(f"User ID for login {login}: {user_id}")
