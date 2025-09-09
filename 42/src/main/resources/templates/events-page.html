@@ -198,12 +198,9 @@ $(document).ready(function() {
         const totalItems = allRows.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        if (totalItems > itemsPerPage) {
-            $('#pagination').show();
-            renderPage(currentPage, totalPages);
-        } else {
-            $('#pagination').hide();
-        }
+        $('#pagination').show();
+        renderPage(currentPage, totalPages);
+
     }
 
     function renderPage(page, totalPages) {
