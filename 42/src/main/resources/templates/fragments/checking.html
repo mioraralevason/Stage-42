@@ -17,34 +17,9 @@
                 </div>
             </div>
 
-            <!-- Pool Selection -->
-            <div class="sel sel--black-panther">
-                <select name="pool" id="pool" required>
-                    <option value="">Sélectionner une piscine</option>
-                    <option value="September" th:selected="${pool == 'September'}">September</option>
-                    <option value="October" th:selected="${pool == 'October'}">October</option>
-                    <option value="November" th:selected="${pool == 'November'}">November</option>
-                    <option value="December" th:selected="${pool == 'December'}">December</option>
-                    <option value="January" th:selected="${pool == 'January'}">January</option>
-                    <option value="February" th:selected="${pool == 'February'}">February</option>
-                    <option value="March" th:selected="${pool == 'March'}">March</option>
-                    <option value="April" th:selected="${pool == 'April'}">April</option>
-                    <option value="May" th:selected="${pool == 'May'}">May</option>
-                    <option value="June" th:selected="${pool == 'June'}">June</option>
-                    <option value="July" th:selected="${pool == 'July'}">July</option>
-                    <option value="August" th:selected="${pool == 'August'}">August</option>
-                </select>
-            </div>
+         
 
-            <!-- Year Selection -->
-            <div class="sel sel--black-panther">
-                <select name="year" id="year" required>
-                    <option value="">Sélectionner une année</option>
-                    <option value="2024" th:selected="${year == '2024'}">2024</option>
-                    <option value="2025" th:selected="${year == '2025'}">2025</option>
-                    <option value="2026" th:selected="${year == '2026'}">2026</option>
-                </select>
-            </div>
+         
 
             <button type="submit" class="codepen-button">
                 <span><i class="fa fa-search"></i> VÉRIFIER PRÉSENCES</span>

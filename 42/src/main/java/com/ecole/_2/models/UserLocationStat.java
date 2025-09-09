@@ -10,16 +10,17 @@ import java.util.stream.Collectors;
 
 public class UserLocationStat {
     private String userId;
+    private String userName; // Nouveau champ pour stocker le nom de l'utilisateur
     private List<LocationStat> stats;
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
 
     public UserLocationStat() {}
 
     public UserLocationStat(String userId, List<LocationStat> stats) {
         this.userId = userId;
         this.stats = stats;
+        this.userName = userId; // Fallback initial sur userId
     }
 
     public String getUserId() {
@@ -30,6 +31,14 @@ public class UserLocationStat {
         this.userId = userId;
     }
 
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName != null ? userName : userId; // Fallback sur userId si userName est null
+    }
+
     public List<LocationStat> getStats() {
         return stats;
     }
@@ -37,6 +46,7 @@ public class UserLocationStat {
     public void setStats(List<LocationStat> stats) {
         this.stats = stats;
     }
+
     private String extractDatePart(String dateTime) {
         if (dateTime == null || dateTime.isEmpty()) return null;
         return dateTime.split("T")[0];
@@ -124,5 +134,4 @@ public class UserLocationStat {
                 .filter(s -> !s.getDate().isBefore(debut) && !s.getDate().isAfter(fin))
                 .collect(Collectors.toList());
     }
-
 }
