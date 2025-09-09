@@ -71,7 +71,7 @@ public class UserLocationStatsController {
             
             String tokenAdmin = apiService.getAccessToken();
             CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
-            UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin);
+            UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin,null,null);
             
             
             Freeze freeze = new Freeze();

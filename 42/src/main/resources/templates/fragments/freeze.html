@@ -1,7 +1,7 @@
 <div th:fragment="freeze" class="dashboard-container">
     <div class="dashboard-header">
         <form action="/freeze" method="get" th:if="${userCursus != null}">
-            <div class="group" style="position: relative;">
+            <div class="group">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
                     <g>
                         <path
@@ -9,15 +9,19 @@
                         ></path>
                     </g>
                 </svg>
+
                 <input
                     id="query"
                     class="input"
                     type="search"
                     placeholder="Search..."
                     name="login"
+                    list="login-suggestions"
                     autocomplete="off"
                 />
-                <div id="suggestions" class="suggestions-dropdown" style="display: none;"></div>
+                <datalist id="login-suggestions" th:if="${listLogin != null}">
+                    <option th:each="login : ${listLogin}" th:value="${login}" th:text="${login}"></option>
+                </datalist>
             </div>
         </form>
         <h1 class="dashboard-title">Dashboard Cursus <span th:if="${login}" th:text="${login}"></span></h1>
@@ -45,7 +49,7 @@
                 </div>
                 <div class="progress-text">
                     <span class="progress-current" th:text="${locationStats.getNbDays(userCursus.getBegin_at(), null)} + ' jours'"></span>
-                    <span class="progress-total">/ 365 jours</span>
+                    <span class="progress-total"></span>
                 </div>
             </div>
         </div>
@@ -63,7 +67,7 @@
                 </div>
                 <div class="progress-text">
                     <span class="progress-current" th:text="${locationStats.getNbOpenDays(userCursus.getBegin_at(), null)} + ' jours'"></span>
-                    <span class="progress-total">/ 250 jours</span>
+                    <span class="progress-total"></span>
                 </div>
             </div>
         </div>
@@ -81,7 +85,7 @@
                 </div>
                 <div class="progress-text">
                     <span class="progress-current" th:text="${#numbers.formatInteger(locationStats.getTotalHours(userCursus.getBegin_at(), null), 0)} + 'h'"></span>
-                    <span class="progress-total">/ 1,700h</span>
+                    <span class="progress-total"></span>
                 </div>
             </div>
         </div>
@@ -103,7 +107,7 @@
                 </div>
                 <div class="progress-text">
                     <span class="progress-current" th:text="'Level ' + ${userCursus.getMilestone()}"></span>
-                    <span class="progress-total">/ Level 10</span>
+                    <span class="progress-total"></span>
                 </div>
             </div>
         </div>
@@ -124,108 +128,42 @@
             </div>
             <div class="progress-text">
                 <span class="progress-current" th:text="${#numbers.formatInteger(freeze, 0)} + ' jours'"></span>
-                <span class="progress-total">/ 30 jours max</span>
+                <span class="progress-total"></span>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .suggestions-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 1000;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .suggestion-item {
-        padding: 8px 12px;
-        cursor: pointer;
-    }
-    .suggestion-item:hover {
-        background: #f0f0f0;
-    }
-</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.progress-fill');
 
-<script th:inline="javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Existing progress bar animation
-        const progressBars = document.querySelectorAll('.progress-fill');
-        progressBars.forEach(bar => {
-            const finalWidth = bar.style.width;
-            bar.style.width = '0%';
-            setTimeout(() => {
-                bar.style.width = finalWidth;
-            }, 500);
-        });
-
-        // Autocomplete functionality
-        const searchInput = document.getElementById('query');
-        const suggestionsContainer = document.getElementById('suggestions');
-        const logins = /*[[${listLogin}]]*/ []; // Thymeleaf injects listLogin
-
-        if (searchInput && suggestionsContainer && logins.length > 0) {
-            searchInput.addEventListener('input', function() {
-                const value = this.value.toLowerCase().trim();
-                suggestionsContainer.innerHTML = '';
-
-                if (value.length === 0) {
-                    suggestionsContainer.style.display = 'none';
-                    return;
-                }
-
-                const filteredLogins = logins.filter(login => 
-                    login.toLowerCase().includes(value)
-                );
-
-                if (filteredLogins.length > 0) {
-                    filteredLogins.forEach(login => {
-                        const suggestion = document.createElement('div');
-                        suggestion.className = 'suggestion-item';
-                        suggestion.textContent = login;
-                        suggestion.addEventListener('click', () => {
-                            searchInput.value = login;
-                            suggestionsContainer.innerHTML = '';
-                            suggestionsContainer.style.display = 'none';
-                        });
-                        suggestionsContainer.appendChild(suggestion);
-                    });
-                    suggestionsContainer.style.display = 'block';
-                } else {
-                    suggestionsContainer.style.display = 'none';
-                }
-            });
-
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
-                    suggestionsContainer.style.display = 'none';
-                }
-            });
-
-            // Allow form submission on Enter key
-            searchInput.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    suggestionsContainer.style.display = 'none';
-                    searchInput.form.submit();
-                }
-            });
-        }
-
-        // Existing card animation
-        setInterval(() => {
-            const cards = document.querySelectorAll('.stat-card');
-            const randomCard = cards[Math.floor(Math.random() * cards.length)];
-            randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
-            setTimeout(() => {
-                randomCard.style.boxShadow = 'none';
-            }, 1000);
-        }, 3000);
+    progressBars.forEach(bar => {
+        const finalWidth = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.width = finalWidth;
+        }, 500);
     });
+
+    const searchInput = document.getElementById('query');
+    const datalist = document.getElementById('login-suggestions');
+    
+    if (searchInput && datalist) {
+        searchInput.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+        });
+    }
+});
+
+setInterval(() => {
+    const cards = document.querySelectorAll('.stat-card');
+    const randomCard = cards[Math.floor(Math.random() * cards.length)];
+    randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 204, 0.3)';
+    
+    setTimeout(() => {
+        randomCard.style.boxShadow = 'none';
+    }, 1000);
+}, 3000);
 </script>

@@ -98,11 +98,11 @@ public class CheckingController {
             String token = apiService.getAccessToken();
             for (User u : userList) {
                 try {
-                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token);
+                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token,startDate,endDate);
                     // Récupérer les données de l'utilisateur pour obtenir le login
                     Map<String, Object> userData = apiService.getUser(u.getId(), token);
-                    String userName = (String) userData.getOrDefault("login", u.getId()); // Utiliser login, sinon userId
-                    stat.setUserName(userName); // Ajouter le nom à l'objet UserLocationStat
+                    String userName = (String) userData.getOrDefault("login", u.getId()); 
+                    stat.setUserName(userName); 
                     userLocationStats.add(stat);
                 } catch (Exception e) {
                     logger.warn("Could not fetch stats or user data for user {}: {}", u.getId(), e.getMessage());
@@ -111,8 +111,6 @@ public class CheckingController {
                     userLocationStats.add(stat);
                 }
             }
-
-            userLocationStats = userLocationStatsFilterService.filterUserLocationStatsByDateRange(userLocationStats, startDate, endDate);
 
             model.addAttribute("userResponse", userResponse);
             model.addAttribute("kind", session.getAttribute("kind"));
@@ -155,6 +153,7 @@ public class CheckingController {
             String today = LocalDate.now().format(DATE_FORMATTER);
             model.addAttribute("startDate", today);
             model.addAttribute("endDate", today);
+            model.addAttribute("login", "");
 
         } catch (Exception e) {
             logger.error("Error loading checking page for user", e);
@@ -166,7 +165,7 @@ public class CheckingController {
 
     @PostMapping("/checkUser")
     public String checkSingleUser(
-            @RequestParam("userId") String userId,
+            @RequestParam("login") String login,
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate,
             Model model,
@@ -184,13 +183,10 @@ public class CheckingController {
 
             UserLocationStat userStat;
             String token = apiService.getAccessToken();
-            userId = apiService.getIdUsers(userId, token);
+            String userId = apiService.getIdUsers(login, token);
             try {
-                userStat = userLocationStatsService.getUserLocationStats(userId, token);
-                // Récupérer les données de l'utilisateur pour obtenir le login
-                Map<String, Object> userData = apiService.getUser(userId, token);
-                String userName = (String) userData.getOrDefault("login", userId); // Utiliser login, sinon userId
-                userStat.setUserName(userName); // Ajouter le nom à l'objet UserLocationStat
+                userStat = userLocationStatsService.getUserLocationStats(userId, token,startDate,endDate);
+                userStat.setUserName(login);
                 List<LocationStat> locationStats = userStat.filterStatsBetween(startDate, endDate);
                 userStat.setStats(locationStats);
             } catch (Exception e) {
@@ -202,9 +198,11 @@ public class CheckingController {
             model.addAttribute("userResponse", userResponse);
             model.addAttribute("userLocationStats", List.of(userStat));
             model.addAttribute("dayCount", userStat.getNbDays(startDate, endDate));
+            model.addAttribute("hourCount", userStat.getTotalHours(startDate, endDate));
             model.addAttribute("startDate", startDate);
             model.addAttribute("endDate", endDate);
             model.addAttribute("searchPerformed", true);
+            model.addAttribute("login", login);
 
         } catch (Exception e) {
             logger.error("Error checking single user", e);

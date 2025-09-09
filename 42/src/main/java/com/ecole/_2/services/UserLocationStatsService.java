@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -16,6 +17,8 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import com.google.common.util.concurrent.RateLimiter;
+
+import jakarta.annotation.Nullable;
 
 @Service
 public class UserLocationStatsService {
@@ -28,9 +31,27 @@ public class UserLocationStatsService {
     /**
      * Récupère les statistiques de localisation pour un utilisateur spécifique.
      */
-    public UserLocationStat getUserLocationStats(String userId, String accessToken) {
+    public UserLocationStat getUserLocationStats(
+            String userId,
+            String accessToken,
+            @Nullable String beginAt,
+            @Nullable String endAt
+    ) {
         RestTemplate restTemplate = new RestTemplate();
-        String url = BASE_URL + userId + "/locations_stats";
+
+        // Construction de l'URL avec paramètres optionnels
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromHttpUrl(BASE_URL + userId + "/locations_stats");
+
+        if (beginAt != null) {
+            builder.queryParam("begin_at", beginAt);
+        }
+        if (endAt != null) {
+            builder.queryParam("end_at", endAt);
+        }
+
+        String url = builder.toUriString();
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -72,6 +93,7 @@ public class UserLocationStatsService {
         }
     }
 
+
     /**
      * Récupère les statistiques de localisation pour une liste d'utilisateurs.
      * Exécute en parallèle avec une limite de 8 requêtes/s.
@@ -110,7 +132,7 @@ public class UserLocationStatsService {
                     while (!success && retries < MAX_RETRIES) {
                         try {
                             limiter.acquire(); // bloque si plus de 8 appels/s
-                            result = getUserLocationStats(userId, accessToken);
+                            result = getUserLocationStats(userId, accessToken,null,null);
                             success = true;
                         } catch (RestClientException e) {
                             String message = e.getMessage() != null ? e.getMessage() : "";

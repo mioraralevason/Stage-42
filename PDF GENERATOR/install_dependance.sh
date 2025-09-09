@@ -26,6 +26,8 @@ pip install requests
 pip install fastapi uvicorn
 pip install requests requests_oauthlib
 pip install google-auth-oauthlib google-auth-httplib2
+pip install aiohttp
+
 
 # Verify installations
 echo "Verifying installed packages..."
