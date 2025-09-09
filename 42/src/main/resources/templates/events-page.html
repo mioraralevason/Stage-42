@@ -122,24 +122,40 @@
                             <td th:text="${event.location != null && !#strings.isEmpty(event.location) ? event.location : '-'}"></td>
                             <td th:text="${event.kind}"></td>
                             <td th:text="${event.nbrSubscribers}"></td>
-                            <td th:text="${event.beginAt}"></td>
-                            <td th:text="${event.endAt}"></td>
+                            <td th:text="${#temporals.format(event.beginAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${#temporals.format(event.endAt, 'dd/MM/yyyy HH:mm')}"></td>
+
                         </tr>
                     </tbody>
                 </table>
 
                 <!-- Pagination controls -->
-                <div class="pagination" id="pagination" style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+                <div class="pagination" id="pagination" 
+                    style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+                    
                     <div>
-                        <button class="pagination-btn" id="prevPage" disabled><i class="fa fa-chevron-left"></i> Previous</button>
-                        <!-- <div id="pageNumbers"></div> -->
-                        <button class="pagination-btn" id="nextPage">Next <i class="fa fa-chevron-right"></i></button>
+                        <button class="pagination-btn" id="prevPage" disabled>
+                            <i class="fa fa-chevron-left"></i> Previous
+                        </button>
+                        <button class="pagination-btn" id="nextPage">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
                     </div>
 
-                    <div id="totalEvents" style="color:#00ffcc; font-weight:bold;">
-                        Total événements : <span th:text="${events != null ? events.size() : 0}">0</span>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div id="totalEvents" style="color:#00ffcc; font-weight:bold;">
+                            Total événements : <span th:text="${events != null ? events.size() : 0}">0</span>
+                        </div>
+
+                        <!-- Bouton Export CSV -->
+                        <form th:action="@{/events/export}" method="get" style="margin:0;">
+                            <button type="submit" class="pagination-btn">
+                                <i class="fa fa-download"></i> Exporter
+                            </button>
+                        </form>
                     </div>
                 </div>
+
 
             </div>
 

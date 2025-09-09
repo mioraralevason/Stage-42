@@ -58,8 +58,8 @@ public class Intra42ClientTest {
                 "65",                     // campusId
                 null,                     // userId
                 "begin_at",               // sort
-                "2025-09-08T00:00:00Z",  // beginAt
-                "2025-09-8T23:59:59Z",  // endAt
+                "2025-09-09T00:00:00Z",  // beginAt
+                "2025-09-9T23:59:59Z",  // endAt
                 token,
                 100                       // pageSize
         );

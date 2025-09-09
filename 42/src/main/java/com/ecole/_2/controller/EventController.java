@@ -3,6 +3,9 @@ package com.ecole._2.controller;
 import com.ecole._2.models.Event;
 import com.ecole._2.services.ApiService;
 import com.ecole._2.services.EventService;
+import com.ecole._2.utils.EventCsvExporter;
+
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Controller
@@ -54,6 +58,29 @@ public class EventController {
         return fetchEvents(beginAt, endAt, session, model);
     }
 
+    @GetMapping("/events/export")
+    public void exportEvents(HttpServletResponse response, HttpSession session, Model model) throws IOException {
+        // Forcer UTF-8
+        response.setContentType("text/csv; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=events.csv");
+
+        List<Event> events = (List<Event>) session.getAttribute("events");
+
+        if (events == null || events.isEmpty()) {
+            model.addAttribute("error", "CSV cannot be generated");
+            fetchEvents(null, null, session, model);
+            return;
+        }
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)) {
+            // BOM pour Excel
+            writer.write('\ufeff');
+            EventCsvExporter.writeEventsToCsv(events, writer);
+        }
+    }
+
+
+
     /**
      * Common method to fetch events and add them to the model
      */
@@ -74,16 +101,9 @@ public class EventController {
                     100          // page size
             );
 
+            session.setAttribute("events", events);
             model.addAttribute("events", events);
-            // Exemple pour formater la date en yyyy-MM-dd
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            if (beginAt != null) {
-                model.addAttribute("beginAt", LocalDate.parse(beginAt).format(formatter));
-            }
-            if (endAt != null) {
-                model.addAttribute("endAt", LocalDate.parse(endAt).format(formatter));
-            }
-
+            model.addAttribute("beginAt", beginAt);
             model.addAttribute("endAt", endAt);
             model.addAttribute("searchPerformed", true);
 

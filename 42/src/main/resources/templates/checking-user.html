@@ -22,12 +22,12 @@
             <form id="checkingForm" method="post" action="/checkUser">
                 <div class="date-group">
                     <div class="date-input-wrapper">
-                        <label for="userId">Student ID</label>
+                        <label for="userId">Student Login</label>
                         <input type="text"
                                class="user-input date-input"
-                               name="userId"
+                               name="login"
                                id="userId"
-                               th:value="${session.userResponse?.login}"
+                               th:value="${login}"
                                required>
                     </div>
                     <div class="date-input-wrapper">
@@ -70,6 +70,10 @@
                         <div class="stat-number" th:text="${dayCount ?: 0}">0</div>
                         <div class="stat-label">Day(s) of Attendance</div>
                     </div>
+                    <div class="stat-card main-stat">
+                        <div class="stat-number" th:text="${hourCount ?: 0}">0</div>
+                        <div class="stat-label">Hour(s) of Attendance</div>
+                    </div>
                     <div class="stat-card">
                         <div class="stat-info" th:text="${startDate + ' - ' + endDate}">Period</div>
                         <div class="stat-label">Date Range</div>
@@ -103,7 +107,7 @@
                                     </td>
 
                                     <!-- Durations -->
-                                    <td>
+                                    <td class="date-cell">
                                         <div th:if="${stat.stats != null and !#lists.isEmpty(stat.stats)}">
                                             <div th:each="s : ${stat.stats}" th:text="${s.durationStr}"></div>
                                         </div>

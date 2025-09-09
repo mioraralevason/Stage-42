@@ -1,153 +1,60 @@
-comment adapter oauth authentification via email a mon projet spring boot.Creer une page de connexion pour se connecter avec email et qui affiche les info recu avec oauth apres
-
-Create an application
-
-In order to use the 42 API, you first need to create a "v2" application here.
-
-You will need to configure a few things in order to make your application:
-
-    The name of your application, wich needs to be explicit (please avoid names like "test" or "app").
-    The redirect URI(s). Theses URI(s) are needed if you app acts as a third tier between the 42 data and an user (this flow is called Web Application Flow), and specify where the user need to be redirected after his authentication. If you plan to use your app just as a server-side app, without user interaction, you can set any valid adress, you'll not need theses URI.
-    The scopes you'll need. A scope is an aera of access. By default, your application only have access to public data, it's your call to add more scopes. Try to only add the scopes you'll really need, you can change your application scopes later if you need more permissions.
-    Public set if your application is visible by other users or not.
-    All the other fields are facultative, and can be set later.
-
-    Note: The complete description of the authentication process through the OAuth2 Web Application Flow is described in the next section of this guide.
-
-Get your credentials
-
-Awesome ! You just created your first application ! Now, take a look on your application page, we got a lot of informations there, but the most important are:
-
-    The client uid, an unique identifier for your application.
-    The client secret, an secret passphrase for your application, which must be kept secret, and only used on server side, where users can't see it.
-
-Make basic requests
-
-Now, you have all you need to setup a little basic script using the API trough your application. In this example, we will use the Client Credentials Flow, in ruby, with the OAuth2 ruby wrapper, but OAuth2 wrappers exists in most languages. The Client Credentials flow is probably the most simple flow of OAuth 2 flows. The main difference from the others is that this flow is not associated with a user. You can read more about this OAuth flow directly from the reference documentation of OAuth2.
-
-First of all, we'll request an access token with our application credentials.
-Ruby
-
-require "oauth2"
-UID = "Your application uid"
-SECRET = "Your secret token"
-# Create the client with your credentials
-client = OAuth2::Client.new(UID, SECRET, site: "https://api.intra.42.fr")
-# Get an access token
-token = client.client_credentials.get_token
-
-Requesting an access token with the client credentials flow is, in fact, just a POST request on the /oauth/token endpoint with a grant_type parameter set to client_credentials. If you wanted to do this with the command line, the equivalent Curl line will be:
-
-curl -X POST --data "grant_type=client_credentials&client_id=MY_AWESOME_UID&client_secret=MY_AWESOME_SECRET" https://api.intra.42.fr/oauth/token
-
-JSON
-
-{
-"access_token":"42804d1f2480c240f94d8f24b45b318e4bf42e742f0c06a42c6f4242787af42d",
-"token_type":"bearer",
-"expires_in":7200,
-"scope":"public",
-"created_at":1443451918
-}
-
-Now, we can fetch all the public data which don't need user authentication, like the list of the cursus in 42. The reference documentation gave us (by the Cursus resource page) the endpoint /v2/cursus.
-Ruby
-
-token.get("/v2/cursus").parsed
-# => [{"id"=>1, "created_at"=>"2014-11-02T17:43:38.480+01:00", "name"=>"42", "slug"=>"42", "users_count"=>1918, "users_url"=>"https://api.intra.42.fr/v2/cursus/42/users", "projects_url"=>"https://api.intra.42.fr/v2/cursus/42/projects", "topics_url"=>"https://api.intra.42.fr/v2/cursus/42/topics"}, ...]
-
-Hooray ! We got our data ! And what about the users in the cursus 42 ?
-Ruby
-
-users_in_cursus = token.get("/v2/cursus/42/users").parsed
-# => {"id"=>2, "login"=>"avisenti", "url"=>"https://api.intra.42.fr/v2/users/avisenti", "end_at"=>nil}, {"id"=>3, "login"=>"spariaud", "url"=>"https://api.intra.42.fr/v2/users/spariaud", "end_at"=>nil}, ...
-users_in_cursus.count
-# => 30
-
-What the hell ? Only 30 users ? And what says the documentation about that ?
-Pagination
-
-The documentation says that the resource is paginated by 30 items by defaut, and that we can specify a page[number] parameter (or, more simpler, the page parameter), in order to navigate trough it. Let's try to fetch the second page:
-Ruby
-
-second_page = token.get("/v2/cursus/42/users", params: {page: {number: 2}})
-# => #<OAuth2::Response:0x007f9ba3b7eb98 @response=#<Faraday::Response:0x007f9ba3b949c0 @on_complete_callbacks=[], @env=#<Faraday::Env @method=:get @body="[{\"id\":35,\"login\":\"droger\",\"url\":\"https://api.intra.42.fr/v2/users/droger\",\"end_at\":null},{\"id\":36,\"login\":\"edelbe\",\"url\":\"https://api.intra.42.fr/v2/users/edelbe\"...
-second_page.parsed
-# => {"id"=>35, "login"=>"droger", "url"=>"https://api.intra.42.fr/v2/users/droger", "end_at"=>nil}, {"id"=>36, "login"=>"edelbe", "url"=>"https://api.intra.42.fr/v2/users/edelbe", "end_at"=>nil}, ...
-
-Well, it seems to work ! But how can we know if there is a next page ? One simple solution is to go forward until the call returns an empty array, but if we need more informations, we can take a look on the Link HTTP response header.
-Ruby
-
-second_page.headers["Link"]
-# => "<https://api.intra.42.fr/v2/cursus/42/users?page=3>; rel=\"next\", <https://api.intra.42.fr/v2/cursus/42/users?page=1>; rel=\"prev\", <https://api.intra.42.fr/v2/cursus/42/users?page=1>; rel=\"first\", <https://api.intra.42.fr/v2/cursus/42/users?page=64>; rel=\"last\""
-
-We now have the links for the first, the next, the previous and the last pages. The response headers contains a lot of more or less useful informations, like the name of your application, the id and the roles.
-HTTP
-
-GET https://api.intra.42.fr/v2/messages?page[number]=1
-HTTP/1.1 200 OK
-Cache-Control: max-age=0, private, must-revalidate
-Content-Type: application/json; charset=utf-8
-ETag: W/"b326132feb08f61b7de85a13ca83f264"
-Link: <https://api.intra.42.fr/v2/messages?page=1>; rel="first", <https://api.intra.42.fr/v2/messages?page=1>; rel="prev", <https://api.intra.42.fr/v2/messages?page=586>; rel="last", <https://api.intra.42.fr/v2/messages?page=3>; rel="next"
-Transfer-Encoding: chunked
-Vary: Origin
-X-Application-Id: 318
-X-Application-Name: test-app
-X-Application-Roles: None
-X-Content-Type-Options: nosniff
-X-Frame-Options: SAMEORIGIN
-X-Meta-Request-Version: 0.4.0
-X-Page: 2
-X-Per-Page: 30
-X-Rack-CORS: preflight-hit; no-origin
-X-Request-Id: c763e95e-95a6-4307-88da-f441038be349
-X-Runtime: 0.278242
-X-Total: 17570
-X-XSS-Protection: 1; mode=block
-{...}
-
-You can also increase the number of results returned by the request with the page[size] parameter (or the per_page parameter). Almost all the endpoints can return up to 100 results per page.
-Limits
-
-By default, your applications has limited to 2 requests/second and 1200 requests / hour
-Roles
-
-Applications can have roles, which grants particular privileges.
-
-There is a short list of the most common roles:
-
-    Alpha: Unstable features
-    Beta: Intranet beta-testers
-    Official App: Approved application to up rate limit
-    Certified App: Certified application manually by a staff member to up rate limit and access to more features
-    Moderator: Moderate topics, messages and versions on the forum
-    Basic Tutor: Manage projects, scales and all cursus related data
-    Basic Staff: Member of the staff, can manage community services, closes, exams and access advanced student data
-
-The roles of your application are present in the x-application-roles field of the response header.
-
-    If your application is "production ready", public and useful, you can send us a mail to request the Official App role.
-
-That's it for now. If your want to go deeper, and allow users to use their 42 account from a third-party website, you can continue with the web application flow tutorial.
-Getting informations about your token
-
-If you want to know more about your token, you can fetch https://api.intra.42.fr/oauth/token/info.
-Bash
-
-curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" https://api.intra.42.fr/oauth/token/info
-# {"resource_owner_id":74,"scopes":["public"],"expires_in_seconds":7174,"application":{"uid":"3089cd94d72cc9109800a5eea5218ed4c3e891ec1784874944225878b95867f9"},"created_at":1439460680}%
-
-    Specification
-    Getting started
-        Create an application
-        Get your credentials
-        Make basic requests
-        Pagination
-        Limits
-        Roles
-        Getting informations about your token
-    Web application flow
-    Contributing
-    Readme
-
+ ID 	Name 	Location 	Type 	Subscribers 	Begin 	End
+29010 	AMA Happy New Year with studs 	Amphi Axian University 	conference 	128 	20/01/2025 07:00 	20/01/2025 09:00
+30235 	[Pour la nouvelle cohorte] AMA de Rentrée 	Amphi Axian University 	conference 	92 	03/03/2025 07:00 	03/03/2025 09:00
+30323 	AMA Première cohorte 	Amphi Axian University 	conference 	128 	05/03/2025 07:00 	05/03/2025 09:00
+30360 	[BDE] "Rencontrons-nous !" :poignée_de_main::tada: 	Mezzanine 	association 	77 	07/03/2025 11:00 	07/03/2025 12:00
+29496 	Alumni Fireside Chat #13 	Zoom (registration necessary) 	conference 	924 	13/03/2025 17:30 	13/03/2025 18:30
+30833 	📢 Rencontre avec l’équipe du SOKA Club ! 🚀 	amphithéâtre AXU 	conference 	51 	24/03/2025 11:00 	24/03/2025 13:00
+31077 	IT Seminar : Atelier FMS 	Online 	workshop 	0 	01/04/2025 12:15 	01/04/2025 13:45
+31076 	IT Seminar : Atelier Green IT 	Online 	workshop 	1 	02/04/2025 07:15 	02/04/2025 09:00
+31159 	AMA d'Avril 	Amphi Axian University 	conference 	133 	03/04/2025 07:00 	03/04/2025 08:00
+31075 	IT Seminar : Atelier GMAO 	Online 	workshop 	0 	03/04/2025 10:00 	03/04/2025 12:00
+30755 	Girls tea time with Lilia Randriamifidimanana 	mezzanine 	event 	20 	03/04/2025 11:00 	03/04/2025 12:00
+31074 	IT SEMINAR - WORKSHOP AI 	Online 	workshop 	1 	03/04/2025 12:00 	03/04/2025 14:00
+31079 	Concours CodinGame ! 	Online 	challenge 	15 	03/04/2025 12:30 	14/04/2025 08:00
+31158 	Trimobe – Survivrez-vous à la menace des géants ? 	Mezzanine 	association 	22 	04/04/2025 11:00 	04/04/2025 12:00
+29538 	Hackathon Inter-Universitaire by TechZara 	Antananarivo (TBD) 	hackathon 	10 	12/04/2025 05:00 	13/04/2025 13:00
+31241 	BNI - Sensibilisation des étudiants sur la culture bancaire. 	A definir 	event 	58 	15/04/2025 07:00 	15/04/2025 08:00
+31219 	Présentation de la BNI 	Amphithéâtre Axian University 	event 	39 	16/04/2025 06:00 	16/04/2025 07:30
+31458 	Girls Tea time with Hygeia 	mezzanine 	event 	9 	17/04/2025 11:00 	17/04/2025 12:00
+31557 	AMA post-commom core (pour la première cohorte) 	Amphi Axian University 	conference 	102 	24/04/2025 11:00 	24/04/2025 13:00
+31457 	Présentation Ingedata 	Amphithéâtre Axian University 	event 	89 	28/04/2025 10:00 	28/04/2025 11:00
+31210 	Présentation de Stellar-ix 	Amphithéâtre Axian University 	event 	81 	30/04/2025 12:00 	30/04/2025 13:00
+31636 	Alumni Fireside Chat #14 - Marie-Eve & Jonas 	Zoom (you must register to attend) 	meet_up 	668 	13/05/2025 16:30 	13/05/2025 17:30
+31588 	Présentation de Mahein 	Amphithéâtre Axian University 	conference 	67 	15/05/2025 07:00 	15/05/2025 09:00
+31190 	Sensibilisation sur l'éducation sexuelle, les IST et le SIDA 	Amphithéâtre Axian University 	event 	25 	15/05/2025 11:00 	15/05/2025 12:00
+32093 	CODER À L'AVEUGLE 	R13 	association 	12 	16/05/2025 11:00 	16/05/2025 13:00
+31599 	(NEW DATE) Drop the mic ! 🎤 	Amphi Axian University 	event 	16 	16/05/2025 11:00 	16/05/2025 13:00
+31994 	Masterclass : De l’humain à l’automatisation : comment Breedj transforme l’expérience Talenteum en HR Tech. 	Amphithéâtre Axian University 	conference 	71 	21/05/2025 06:30 	21/05/2025 08:00
+31872 	Rencontre avec la DSI de Yas 	Amphithéâtre Axian University 	conference 	79 	22/05/2025 06:00 	22/05/2025 07:30
+32094 	ESCAPE ROOM 	Tanière du Geek 	association 	7 	22/05/2025 06:00 	22/05/2025 14:00
+32123 	AMA post-commom core #2 	Amphi Axian University 	conference 	108 	23/05/2025 11:00 	23/05/2025 13:00
+31686 	Rencontre RH Axian Energy et stud 	Amphithéâtre Axian University 	conference 	100 	28/05/2025 06:00 	28/05/2025 07:30
+31187 	Piscine Data Science -- Advanced Curriculum 	42 Berlin, Germany 	piscine 	285 	02/06/2025 08:00 	08/06/2025 21:00
+32774 	Présentation des packs BNI 	mezzanine 42 	conference 	21 	12/06/2025 07:00 	12/06/2025 08:00
+32773 	Girls Tea time 	mezzanine 	event 	4 	12/06/2025 11:00 	12/06/2025 12:00
+32823 	Atelier "image de soi" 	mezzanine 42 	event 	53 	18/06/2025 07:30 	18/06/2025 09:00
+32772 	Sensibilisation sur la nutrition 	mezzanine 	conference 	25 	19/06/2025 11:00 	19/06/2025 12:00
+32977 	Girls tea time with Nadia 	Mezzanine 	meet_up 	11 	03/07/2025 11:00 	03/07/2025 12:30
+32597 	AMA - Juillet 	- 	conference 	108 	09/07/2025 07:00 	09/07/2025 08:00
+33266 	Session d'anglais façon Toastmasters 	mezzanine 42 	event 	20 	09/07/2025 11:00 	09/07/2025 12:00
+33264 	Girls Tea time/atelier vision board suite 	mezzanine 42 	event 	1 	17/07/2025 11:00 	17/07/2025 12:00
+33750 	IA, Code & Terre : Bâtir l’avenir de l’Agrotech et de l’Edutech à Madagascar 	Amphi AXU 	conference 	48 	24/07/2025 07:00 	24/07/2025 09:00
+33686 	Introduction à l’UX - Comprendre les bases de l’expérience utilisateu 	Amphi 	conference 	49 	30/07/2025 06:00 	30/07/2025 08:00
+33262 	Girls tea time : be the leader people remember (through speaking) 	mezzanine 42 	conference 	17 	31/07/2025 07:00 	31/07/2025 09:30
+33982 	AMA post-commom core #3 	Amphi Axian University 	conference 	79 	05/08/2025 11:00 	05/08/2025 13:00
+34086 	AMA du mois d'Août 	Amphi Axian University 	conference 	72 	06/08/2025 07:00 	06/08/2025 09:00
+34146 	Drop the mic ! 🎤 	Mezzanine 	event 	6 	07/08/2025 11:30 	07/08/2025 13:00
+34197 	AMA post-commom core #4 	Amphi Axian University 	conference 	91 	19/08/2025 11:00 	19/08/2025 13:00
+34407 	Drop the mic ! 🎤 	Mezzanine 	event 	8 	22/08/2025 11:00 	22/08/2025 12:00
+34354 	LA SORTIE ANNUELLE TANT ATTENDUE EST LÀ ! :tada: 	dehors 	association 	84 	01/09/2025 04:00 	01/09/2025 16:00
+34530 	Zumba session 	mezzanine 42 	event 	4 	09/09/2025 10:40 	09/09/2025 11:40
+33455 	🎓 Alumni Fireside Chat #15 	- 	meet 	1035 	09/09/2025 16:30 	09/09/2025 17:30
+34927 	Sensibilisation sur le tri des déchets 	mezzanine 42 	conference 	49 	11/09/2025 05:30 	11/09/2025 09:00
+34732 	Girls tea time with Mialisoa 	mezzanine 42 	meet_up 	14 	11/09/2025 11:00 	11/09/2025 12:00
+34101 	🎬 Projection du film "H2G2" 	Game Room 	event 	42 	17/09/2025 11:00 	17/09/2025 13:00
+34743 	Atelier : comment choisir son orientation ? 	mezzanine 42 	conference 	27 	19/09/2025 07:30 	19/09/2025 08:30
+34532 	Sensibilisation sur la santé mentale 	mezzanine 42 	conference 	19 	19/09/2025 11:00 	19/09/2025 12:00
+34894 	Drop the Mic : spécial duo 	mezzanine 42 	event 	1 	19/09/2025 11:00 	19/09/2025 12:00
+34108 	🎬 Projection du film "H2G2" 	Game Room 	event 	24 	22/10/2025 11:00 	22/10/2025 13:00
+34109 	🎬 Projection du film "H2G2" 	Game Room 	event 	11 	26/11/2025 11:00 	26/11/2025 13:00

@@ -755,7 +755,7 @@ input[name="login"]::placeholder {
 }
 
 /* ===== Input UserID ===== */
-input[name="userId"] {
+input[name="login"] {
     display: block;
     width: 300px;
     max-width: 100%;
@@ -774,16 +774,16 @@ input[name="userId"] {
     text-align: center;
 }
 
-input[name="userId"]::placeholder {
+input[name="login"]::placeholder {
     color: #888;
     opacity: 1;
 }
 
-input[name="userId"]:hover {
+input[name="login"]:hover {
     box-shadow: 0 0 0 2.5px #2f303d, 0 0 25px -15px #000;
 }
 
-input[name="userId"]:focus {
+input[name="login"]:focus {
     border-color: #00ffcc;
     box-shadow: 0 0 0 2.5px #00ffcc, 0 0 25px -15px #000;
     color: #00fff2;
@@ -792,7 +792,7 @@ input[name="userId"]:focus {
 }
 
 /* Icon à gauche (optionnel si tu veux un petit user icon) */
-input[name="userId"] + .search-icon {
+input[name="login"] + .search-icon {
     position: absolute;
     left: 15px;
     top: 50%;
