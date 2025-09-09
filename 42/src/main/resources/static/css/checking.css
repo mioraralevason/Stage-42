@@ -138,6 +138,7 @@
 .table-header {
     padding: 20px;
     border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+    color: aliceblue;
 }
 
 .table-header h4 {
@@ -315,53 +316,53 @@
 
 
 .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            padding: 20px;
-            background: rgba(0, 255, 204, 0.05);
-            border-left: 3px solid #00ffcc;
-            border-right: 3px solid #00ffcc;
-            border-bottom: 3px solid #00ffcc;
-            border-radius: 0 0 10px 10px;
-        }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    background: rgba(0, 255, 204, 0.05);
+    border-left: 3px solid #00ffcc;
+    border-right: 3px solid #00ffcc;
+    border-bottom: 3px solid #00ffcc;
+    border-radius: 0 0 10px 10px;
+}
 
-        .pagination-btn {
-            padding: 10px 15px;
-            background: rgba(0, 255, 204, 0.1);
-            border: 2px solid #00ffcc;
-            border-radius: 5px;
-            color: #00ffcc;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+.pagination-btn {
+    padding: 10px 15px;
+    background: rgba(0, 255, 204, 0.1);
+    border: 2px solid #00ffcc;
+    border-radius: 5px;
+    color: #00ffcc;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
-        .pagination-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(0, 212, 170, 0.2));
-            transform: translateY(-2px);
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-        }
+.pagination-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(0, 212, 170, 0.2));
+    transform: translateY(-2px);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
 
-        .pagination-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
-        .pagination-btn.active {
-            background: linear-gradient(135deg, #00ffcc, #00d4aa);
-            color: #000;
-            border: 2px solid #00ffcc;
-        }
+.pagination-btn.active {
+    background: linear-gradient(135deg, #00ffcc, #00d4aa);
+    color: #000;
+    border: 2px solid #00ffcc;
+}
 
-        .pagination-btn i {
-            margin: 0 5px;
-        }
+.pagination-btn i {
+    margin: 0 5px;
+}
 
-        .page-number {
-            min-width: 40px;
-            text-align: center;
-        }
+.page-number {
+    min-width: 40px;
+    text-align: center;
+}

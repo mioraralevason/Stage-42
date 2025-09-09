@@ -1,87 +1,108 @@
 #!/usr/bin/env python3
+
 import os
-import re
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
-from pdf import generate_certificate
-from api import get_id_users, get_user, get_user_candidature,get_access_token
+import asyncio
+import aiohttp
+import math
+from dotenv import load_dotenv
 
-# Initialize FastAPI app
-app = FastAPI(title="42 Certificate API", description="API for generating school certificates using 42 API data")
+# Load environment variables
+load_dotenv()
 
-@app.get("/get_access_token")
-async def api_get_access_token():
-    """Endpoint to get access token."""
-    try:
-        access_token = get_access_token()
-        return {"access_token": access_token}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+# API credentials
+UID = os.getenv("UID")
+SECRET = os.getenv("SECRET")
+BASE_URL = "https://api.intra.42.fr"
+access_token_url = f"{BASE_URL}/oauth/token"
+users_url = f"{BASE_URL}/v2/users"
+locations_url = f"{BASE_URL}/v2/locations"
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+MAX_REQ_PER_SECOND = 8  # rate limit
+sem = asyncio.Semaphore(MAX_REQ_PER_SECOND)
 
-@app.get("/get_id_users/{login}")
-async def api_get_id_users(login: str):
-    """Endpoint to get user ID by login."""
-    try:
-        user_id = get_id_users(login)
-        return {"login": login, "user_id": user_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
-@app.get("/get_user/{user_id}")
-async def api_get_user(user_id: str):
-    """Endpoint to get user data by user ID."""
-    try:
-        user_data = get_user(user_id)
-        return user_data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
+def get_access_token():
+    """Fetch access token synchronously (for simplicity)."""
+    import requests
+    data = {'grant_type': 'client_credentials', 'scope': 'public projects profile tig elearning forum'}
+    r = requests.post(access_token_url, auth=(UID, SECRET), data=data)
+    r.raise_for_status()
+    return r.json().get("access_token")
 
-@app.get("/get_user_candidature/{user_id}")
-async def api_get_user_candidature(user_id: str):
-    """Endpoint to get candidature data by user ID."""
-    try:
-        candidature_data = get_user_candidature(user_id)
-        return candidature_data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur: {str(e)}")
 
-@app.get("/generate_certificate/{login}", response_class=FileResponse)
-async def api_generate_certificate(login: str, signer_par: str = "Aucune"):
-    """Endpoint to generate and return a PDF certificate for a given login."""
-    # Basic login validation (alphanumeric and underscores only)
-    if not login:
-        raise HTTPException(status_code=400, detail="Le login ne peut pas être vide")
-    if not re.match(r'^[a-zA-Z0-9_]+$', login):
-        raise HTTPException(status_code=400, detail="Le login ne doit contenir que des lettres, chiffres ou underscores")
+def get_id_users(login: str, token: str) -> str:
+    import requests
+    headers = {'Authorization': f'Bearer {token}', "Content-Type": "application/json"}
+    r = requests.get(f"{users_url}?filter[login]={login}", headers=headers)
+    r.raise_for_status()
+    users = r.json()
+    if not users:
+        raise ValueError("Utilisateur non trouvé")
+    return str(users[0]["id"])
 
-    try:
-        # Validate signer_par
-        if signer_par not in ["Directeur", "Assistant", "Aucune"]:
-            raise HTTPException(status_code=400, detail="La signature doit être 'Directeur', 'Assistant' ou 'Aucune'")
 
-        # Generate certificate and get the output filename
-        output_file = generate_certificate(login=login, signer_par=signer_par)
+async def fetch_page(session, url):
+    async with sem:
+        async with session.get(url) as response:
+            data = await response.json()
+            await asyncio.sleep(1 / MAX_REQ_PER_SECOND)
+            return data
 
-        # Return the generated PDF as a file response
-        if not os.path.exists(output_file):
-            raise HTTPException(status_code=500, detail=f"Erreur lors de la génération du PDF: fichier non trouvé à {output_file}")
-        
-        print(f"PDF generated for user {login}: {output_file}")
-        return FileResponse(
-            output_file,
-            media_type="application/pdf",
-            filename=f"certificat_scolarite_{login}.pdf"
-        )
 
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur inattendue: {str(e)}")
+async def fetch_all_pages(url_template, total_pages, token):
+    all_data = []
+    async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"}) as session:
+        tasks = [fetch_page(session, url_template.format(page=page)) for page in range(1, total_pages + 1)]
+        pages = await asyncio.gather(*tasks)
+        for page_data in pages:
+            all_data.extend(page_data)
+    return all_data
 
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+
+async def get_all_events(token, campus_id="65", page_size=100):
+    # Première requête pour connaître le nombre total d'événements
+    async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"}) as session:
+        url = f"{BASE_URL}/v2/campus/{campus_id}/events?page[number]=1&page[size]={page_size}"
+        async with session.get(url) as resp:
+            first_page = await resp.json()
+            total_events = int(resp.headers.get("X-Total", "1000000"))
+            total_pages = math.ceil(total_events / page_size)
+
+    url_template = f"{BASE_URL}/v2/campus/{campus_id}/events?page[number]={{page}}&page[size]={page_size}"
+    all_events = await fetch_all_pages(url_template, total_pages, token)
+    print(f"Total events fetched = {len(all_events)}")
+    return all_events
+
+
+async def get_all_locations(token, campus_id="65", page_size=100):
+    async with aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"}) as session:
+        url = f"{locations_url}?campus_id={campus_id}&page[number]=1&page[size]={page_size}"
+        async with session.get(url) as resp:
+            first_page = await resp.json()
+            total_locations = int(resp.headers.get("X-Total", "1000000"))
+            total_pages = math.ceil(total_locations / page_size)
+
+    url_template = f"{locations_url}?campus_id={campus_id}&page[number]={{page}}&page[size]={page_size}"
+    all_locations = await fetch_all_pages(url_template, total_pages, token)
+    print(f"Total locations fetched = {len(all_locations)}")
+    return all_locations
+
+
+async def main():
+    # récupère le token etc.
+    token = get_access_token()
+    
+    # crée les tâches
+    tasks = [
+        get_all_events(campus_id="65", token=token),
+        get_all_locations(campus_id="65", token=token)
+    ]
+    
+    all_data = await asyncio.gather(*tasks)
+    events, locations = all_data
+    
+    print("First event:", events[0]["name"] if events else "No events found")
+    print("First location:", locations[0]["name"] if locations else "No locations found")
+
+# lance la boucle
+asyncio.run(main())
