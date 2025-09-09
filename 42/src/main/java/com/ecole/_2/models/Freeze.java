@@ -55,6 +55,6 @@ public class Freeze {
             return 0;
             
         }
-        return (getA()/getB()) + (getC()/getA()) * getD();
+        return (getA()/getB()) * (getC()/getA()) * getD();
     }
 }
