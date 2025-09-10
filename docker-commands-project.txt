@@ -1,0 +1,67 @@
+# =========================
+# Docker commands cheatsheet for Stage-42 project (Spring Boot + Docker)
+# =========================
+
+# --- 1️⃣ Build the project ---
+# Compile the Maven project and package the JAR
+./mvnw clean package -DskipTests
+
+# --- 2️⃣ Build the Docker image ---
+# Build a Docker image from Dockerfile
+docker build -t stage42-app .
+
+# Rebuild without cache (forces update)
+docker build --no-cache -t stage42-app .
+
+# --- 3️⃣ Run the container ---
+# Run container in detached mode, map port 9090
+docker run -d --name stage42 -p 9090:9090 stage42-app
+
+# If port 9090 is already in use, stop the conflicting process first
+sudo lsof -i :9090
+sudo kill -9 <PID>
+
+# --- 4️⃣ Manage the container ---
+# Stop the running container
+docker stop stage42
+
+# Remove the stopped container
+docker rm stage42
+
+# Restart an existing container
+docker restart stage42
+
+# --- 5️⃣ Check logs ---
+# View logs in real-time
+docker logs -f stage42
+
+# --- 6️⃣ Execute commands inside the container ---
+# Enter container bash shell
+docker exec -it stage42 /bin/bash
+
+# --- 7️⃣ Cleanup Docker (optional) ---
+# Remove all stopped containers
+docker container prune
+
+# Remove all unused images
+docker image prune -a
+
+# Remove all unused volumes
+docker volume prune
+
+# --- 8️⃣ Info & monitoring ---
+# Inspect container configuration
+docker inspect stage42
+
+# Monitor container resource usage
+docker stats
+
+# --- Tips for Stage-42 deployment ---
+# 1. Always stop and remove the old container before running a new one.
+# 2. Make sure port 9090 is free on your host.
+# 3. You can map to a different host port if needed, e.g., -p 9091:9090
+# 4. Combine commands in a deploy.sh script for one-step deployment.
+
+# =========================
+# End of Stage-42 Docker commands cheatsheet
+# =========================
