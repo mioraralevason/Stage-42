@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,11 +12,13 @@
         <!-- Barre latérale -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-store"></i> Chaussure Pro</h2>
+                <h2><i class="fas fa-store"></i> Multi-Activités Pro</h2>
             </div>
             <ul class="sidebar-menu">
                 <li><a href="${pageContext.request.contextPath}/home"><i class="fas fa-home"></i> <span>Accueil</span></a></li>
-                <li><a href="${pageContext.request.contextPath}/products" class="active"><i class="fas fa-box"></i> <span>Produits</span></a></li>
+                <li><a href="${pageContext.request.contextPath}/chaussures"><i class="fas fa-shoe-prints"></i> <span>Vente Chaussures</span></a></li>
+                <li><a href="#"><i class="fas fa-glass-martini-alt"></i> <span>Location Vaisselle</span></a></li>
+                <li><a href="#"><i class="fas fa-tshirt"></i> <span>Vente Tissu</span></a></li>
                 <li><a href="#"><i class="fas fa-users"></i> <span>Clients</span></a></li>
                 <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>Commandes</span></a></li>
                 <li><a href="#"><i class="fas fa-chart-bar"></i> <span>Statistiques</span></a></li>

@@ -15,7 +15,7 @@
         <servlet-name>HomeServlet</servlet-name>
         <servlet-class>com.example.servlet.HomeServlet</servlet-class>
     </servlet>
-    
+
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/home</url-pattern>
@@ -25,10 +25,20 @@
         <servlet-name>ProductsServlet</servlet-name>
         <servlet-class>com.example.servlet.ProductsServlet</servlet-class>
     </servlet>
-    
+
     <servlet-mapping>
         <servlet-name>ProductsServlet</servlet-name>
         <url-pattern>/products</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ChaussureServlet</servlet-name>
+        <servlet-class>com.example.servlet.ChaussureServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ChaussureServlet</servlet-name>
+        <url-pattern>/chaussures</url-pattern>
     </servlet-mapping>
 
 </web-app>
