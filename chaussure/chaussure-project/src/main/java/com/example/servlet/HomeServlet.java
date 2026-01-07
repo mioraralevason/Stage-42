@@ -12,7 +12,7 @@ public class HomeServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         // Définir l'attribut de message pour la page JSP
-        request.setAttribute("message", "Bienvenue sur notre site de vente de chaussures ! Découvrez notre sélection exclusive de chaussures en vous rendant sur la page Vente Chaussures.");
+        request.setAttribute("message", "Bienvenue sur Chaussure Shop ! Découvrez notre sélection exclusive de chaussures en vous rendant sur la page Vente Chaussures.");
         request.setAttribute("title", "Accueil");
         request.setAttribute("subtitle", "Page d'accueil");
         

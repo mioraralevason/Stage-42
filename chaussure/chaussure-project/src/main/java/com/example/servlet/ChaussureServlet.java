@@ -83,7 +83,14 @@ public class ChaussureServlet extends HttpServlet {
             Integer marqueId = (marqueStr != null && !marqueStr.isEmpty()) ? Integer.parseInt(marqueStr) : null;
             Integer categorieId = (categorieStr != null && !categorieStr.isEmpty()) ? Integer.parseInt(categorieStr) : null;
             Integer typeId = (typeStr != null && !typeStr.isEmpty()) ? Integer.parseInt(typeStr) : null;
-            Integer tailleId = (tailleStr != null && !tailleStr.isEmpty()) ? Integer.parseInt(tailleStr) : null;
+
+            // Pour le filtre de taille, nous devons d'abord récupérer l'ID correspondant
+            Integer tailleId = null;
+            if (tailleStr != null && !tailleStr.isEmpty()) {
+                // On va chercher l'ID de la taille dans la base de données
+                tailleId = chaussureDao.getTailleIdByValue(tailleStr);
+            }
+
             Integer couleurId = (couleurStr != null && !couleurStr.isEmpty()) ? Integer.parseInt(couleurStr) : null;
             Double prixMin = (prixMinStr != null && !prixMinStr.isEmpty()) ? Double.parseDouble(prixMinStr) : null;
             Double prixMax = (prixMaxStr != null && !prixMaxStr.isEmpty()) ? Double.parseDouble(prixMaxStr) : null;
@@ -101,6 +108,13 @@ public class ChaussureServlet extends HttpServlet {
         // Récupérer le panier de l'utilisateur
         int userId = 1; // Pour l'exemple, à remplacer par l'utilisateur réellement connecté
         Panier panier = panierDao.getPanierByUserId(userId);
+
+        // Récupérer les listes dynamiques pour les filtres
+        request.setAttribute("marques", chaussureDao.getAllMarques());
+        request.setAttribute("categories", chaussureDao.getAllCategories());
+        request.setAttribute("types", chaussureDao.getAllTypes());
+        request.setAttribute("tailles", chaussureDao.getAllTailles());
+        request.setAttribute("couleurs", chaussureDao.getAllCouleurs());
 
         request.setAttribute("chaussures", chaussures);
         request.setAttribute("panier", panier);

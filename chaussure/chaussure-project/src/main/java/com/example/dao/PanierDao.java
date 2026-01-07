@@ -87,19 +87,58 @@ public class PanierDao {
 
     public boolean addItemToCart(int userId, int chaussureId, int quantity) {
         boolean success = false;
-        String sql = "SELECT ajouter_au_panier(?, ?, ?) AS success";
+
+        // Trouver ou créer le panier de l'utilisateur
+        int panierId = getOrCreatePanierId(userId);
+        if (panierId == -1) {
+            return false;
+        }
+
+        // Vérifier si la chaussure est déjà dans le panier
+        String checkSql = "SELECT id, quantite FROM elements_panier WHERE panier_id = ? AND chaussure_id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             CallableStatement stmt = conn.prepareCall(sql)) {
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
 
-            stmt.setInt(1, userId);
-            stmt.setInt(2, chaussureId);
-            stmt.setInt(3, quantity);
+            checkStmt.setInt(1, panierId);
+            checkStmt.setInt(2, chaussureId);
 
-            ResultSet rs = stmt.executeQuery();
+            ResultSet rs = checkStmt.executeQuery();
+
             if (rs.next()) {
-                // Pour l'instant, on suppose que l'opération a réussi
-                success = true;
+                // La chaussure est déjà dans le panier, on met à jour la quantité
+                int existingItemId = rs.getInt("id");
+                int existingQuantity = rs.getInt("quantite");
+                int newQuantity = existingQuantity + quantity;
+
+                // Vérifier le stock disponible
+                String stockSql = "SELECT stock FROM chaussures WHERE id = ?";
+                try (PreparedStatement stockStmt = conn.prepareStatement(stockSql)) {
+                    stockStmt.setInt(1, chaussureId);
+                    ResultSet stockRs = stockStmt.executeQuery();
+                    if (stockRs.next() && stockRs.getInt("stock") >= newQuantity) {
+                        String updateSql = "UPDATE elements_panier SET quantite = ? WHERE id = ?";
+                        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                            updateStmt.setInt(1, newQuantity);
+                            updateStmt.setInt(2, existingItemId);
+                            success = updateStmt.executeUpdate() > 0;
+                        }
+                    }
+                }
+            } else {
+                // La chaussure n'est pas dans le panier, on l'ajoute
+                String insertSql = "INSERT INTO elements_panier (panier_id, chaussure_id, quantite, prix_unitaire) " +
+                                 "SELECT ?, ?, ?, prix FROM chaussures WHERE id = ?";
+
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, panierId);
+                    insertStmt.setInt(2, chaussureId);
+                    insertStmt.setInt(3, quantity);
+                    insertStmt.setInt(4, chaussureId);
+
+                    int rowsAffected = insertStmt.executeUpdate();
+                    success = rowsAffected > 0;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -189,5 +228,39 @@ public class PanierDao {
         }
 
         return null;
+    }
+
+    private int getOrCreatePanierId(int userId) {
+        int panierId = -1;
+
+        // Essayer de trouver un panier existant
+        String selectSql = "SELECT id FROM paniers WHERE utilisateur_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+
+            selectStmt.setInt(1, userId);
+            ResultSet rs = selectStmt.executeQuery();
+
+            if (rs.next()) {
+                panierId = rs.getInt("id");
+            } else {
+                // Pas de panier existant, en créer un nouveau
+                String insertSql = "INSERT INTO paniers (utilisateur_id) VALUES (?) RETURNING id";
+
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, userId);
+                    ResultSet insertRs = insertStmt.executeQuery();
+
+                    if (insertRs.next()) {
+                        panierId = insertRs.getInt("id");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return panierId;
     }
 }

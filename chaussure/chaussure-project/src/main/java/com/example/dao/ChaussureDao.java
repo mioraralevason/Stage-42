@@ -197,4 +197,112 @@ public class ChaussureDao implements Dao<Chaussure> {
         // Cette méthode n'est pas nécessaire immédiatement
         return false;
     }
+
+    // Méthodes pour récupérer les listes de filtres depuis la base de données
+    public List<String[]> getAllMarques() {
+        List<String[]> marques = new ArrayList<>();
+        String sql = "SELECT id, nom FROM marques ORDER BY nom";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String[] marque = {String.valueOf(rs.getInt("id")), rs.getString("nom")};
+                marques.add(marque);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return marques;
+    }
+
+    public List<String[]> getAllCategories() {
+        List<String[]> categories = new ArrayList<>();
+        String sql = "SELECT id, nom FROM categories ORDER BY nom";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String[] categorie = {String.valueOf(rs.getInt("id")), rs.getString("nom")};
+                categories.add(categorie);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return categories;
+    }
+
+    public List<String[]> getAllTypes() {
+        List<String[]> types = new ArrayList<>();
+        String sql = "SELECT id, nom FROM types_chaussures ORDER BY nom";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String[] type = {String.valueOf(rs.getInt("id")), rs.getString("nom")};
+                types.add(type);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return types;
+    }
+
+    public List<String[]> getAllTailles() {
+        List<String[]> tailles = new ArrayList<>();
+        String sql = "SELECT id, valeur FROM tailles ORDER BY valeur::INTEGER";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String[] taille = {String.valueOf(rs.getInt("id")), rs.getString("valeur")};
+                tailles.add(taille);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tailles;
+    }
+
+    public List<String[]> getAllCouleurs() {
+        List<String[]> couleurs = new ArrayList<>();
+        String sql = "SELECT id, nom FROM couleurs ORDER BY nom";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String[] couleur = {String.valueOf(rs.getInt("id")), rs.getString("nom")};
+                couleurs.add(couleur);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return couleurs;
+    }
+
+    public Integer getTailleIdByValue(String tailleValue) {
+        String sql = "SELECT id FROM tailles WHERE valeur = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, tailleValue);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Retourne null si la taille n'est pas trouvée
+    }
 }

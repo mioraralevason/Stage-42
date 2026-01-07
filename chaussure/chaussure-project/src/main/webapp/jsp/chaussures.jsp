@@ -145,18 +145,11 @@
         <!-- Barre latérale -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-store"></i> Multi-Activités Pro</h2>
+                <h2><i class="fas fa-store"></i> Chaussure Shop</h2>
             </div>
             <ul class="sidebar-menu">
                 <li><a href="${pageContext.request.contextPath}/home"><i class="fas fa-home"></i> <span>Accueil</span></a></li>
                 <li><a href="${pageContext.request.contextPath}/chaussures" class="active"><i class="fas fa-shoe-prints"></i> <span>Vente Chaussures</span></a></li>
-                <li><a href="#"><i class="fas fa-glass-martini-alt"></i> <span>Location Vaisselle</span></a></li>
-                <li><a href="#"><i class="fas fa-tshirt"></i> <span>Vente Tissu</span></a></li>
-                <li><a href="#"><i class="fas fa-users"></i> <span>Clients</span></a></li>
-                <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>Commandes</span></a></li>
-                <li><a href="#"><i class="fas fa-chart-bar"></i> <span>Statistiques</span></a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> <span>Paramètres</span></a></li>
-                <li><a href="#"><i class="fas fa-question-circle"></i> <span>Aide</span></a></li>
             </ul>
         </nav>
 
@@ -177,11 +170,29 @@
                 <div class="filter-section">
                     <h3>Filtrer les chaussures</h3>
 
+                    <%
+                        // Récupérer les paramètres pour les comparer avec les options
+                        String marqueParam = request.getParameter("marque");
+                        String categorieParam = request.getParameter("categorie");
+                        String typeParam = request.getParameter("type");
+                        String tailleParam = request.getParameter("taille");
+                        String couleurParam = request.getParameter("couleur");
+                        String keywordParam = request.getParameter("keyword");
+
+                        // Initialiser les valeurs par défaut
+                        if(keywordParam == null) keywordParam = "";
+                        if(marqueParam == null) marqueParam = "";
+                        if(categorieParam == null) categorieParam = "";
+                        if(typeParam == null) typeParam = "";
+                        if(tailleParam == null) tailleParam = "";
+                        if(couleurParam == null) couleurParam = "";
+                    %>
+
                     <form method="get" action="${pageContext.request.contextPath}/chaussures">
                         <input type="hidden" name="action" value="view">
 
                         <div class="search-bar">
-                            <input type="text" name="keyword" placeholder="Rechercher une chaussure..." value="${param.keyword != null ? param.keyword : ''}">
+                            <input type="text" name="keyword" placeholder="Rechercher une chaussure..." value="<%= keywordParam %>">
                         </div>
 
                         <div class="filter-row">
@@ -189,11 +200,17 @@
                                 <label for="marque">Marque:</label>
                                 <select id="marque" name="marque">
                                     <option value="">Toutes les marques</option>
-                                    <option value="1" ${(param.marque != null && param.marque eq '1') ? 'selected' : ''}>Nike</option>
-                                    <option value="2" ${(param.marque != null && param.marque eq '2') ? 'selected' : ''}>Adidas</option>
-                                    <option value="3" ${(param.marque != null && param.marque eq '3') ? 'selected' : ''}>Puma</option>
-                                    <option value="4" ${(param.marque != null && param.marque eq '4') ? 'selected' : ''}>Timberland</option>
-                                    <option value="5" ${(param.marque != null && param.marque eq '5') ? 'selected' : ''}>Converse</option>
+                                    <%
+                                        java.util.List<String[]> marques = (java.util.List<String[]>) request.getAttribute("marques");
+                                        if(marques != null) {
+                                            for(String[] marque : marques) {
+                                                String selected = marqueParam.equals(marque[0]) ? "selected" : "";
+                                    %>
+                                                <option value="<%= marque[0] %>" <%= selected %>><%= marque[1] %></option>
+                                    <%
+                                            }
+                                        }
+                                    %>
                                 </select>
                             </div>
 
@@ -201,11 +218,17 @@
                                 <label for="categorie">Catégorie:</label>
                                 <select id="categorie" name="categorie">
                                     <option value="">Toutes les catégories</option>
-                                    <option value="1" ${(param.categorie != null && param.categorie eq '1') ? 'selected' : ''}>Sport</option>
-                                    <option value="2" ${(param.categorie != null && param.categorie eq '2') ? 'selected' : ''}>Mode</option>
-                                    <option value="3" ${(param.categorie != null && param.categorie eq '3') ? 'selected' : ''}>Travail</option>
-                                    <option value="4" ${(param.categorie != null && param.categorie eq '4') ? 'selected' : ''}>Enfant</option>
-                                    <option value="5" ${(param.categorie != null && param.categorie eq '5') ? 'selected' : ''}>Running</option>
+                                    <%
+                                        java.util.List<String[]> categories = (java.util.List<String[]>) request.getAttribute("categories");
+                                        if(categories != null) {
+                                            for(String[] categorie : categories) {
+                                                String selected = categorieParam.equals(categorie[0]) ? "selected" : "";
+                                    %>
+                                                <option value="<%= categorie[0] %>" <%= selected %>><%= categorie[1] %></option>
+                                    <%
+                                            }
+                                        }
+                                    %>
                                 </select>
                             </div>
 
@@ -213,12 +236,17 @@
                                 <label for="type">Type:</label>
                                 <select id="type" name="type">
                                     <option value="">Tous les types</option>
-                                    <option value="1" ${(param.type != null && param.type eq '1') ? 'selected' : ''}>Baskets</option>
-                                    <option value="2" ${(param.type != null && param.type eq '2') ? 'selected' : ''}>Bottes</option>
-                                    <option value="3" ${(param.type != null && param.type eq '3') ? 'selected' : ''}>Chaussures basses</option>
-                                    <option value="4" ${(param.type != null && param.type eq '4') ? 'selected' : ''}>Sandales</option>
-                                    <option value="5" ${(param.type != null && param.type eq '5') ? 'selected' : ''}>Escarpins</option>
-                                    <option value="6" ${(param.type != null && param.type eq '6') ? 'selected' : ''}>Mocassins</option>
+                                    <%
+                                        java.util.List<String[]> types = (java.util.List<String[]>) request.getAttribute("types");
+                                        if(types != null) {
+                                            for(String[] type : types) {
+                                                String selected = typeParam.equals(type[0]) ? "selected" : "";
+                                    %>
+                                                <option value="<%= type[0] %>" <%= selected %>><%= type[1] %></option>
+                                    <%
+                                            }
+                                        }
+                                    %>
                                 </select>
                             </div>
                         </div>
@@ -226,31 +254,24 @@
                         <div class="filter-row">
                             <div class="filter-item">
                                 <label for="taille">Taille:</label>
-                                <select id="taille" name="taille">
-                                    <option value="">Toutes les tailles</option>
-                                    <option value="5" ${(param.taille != null && param.taille eq '5') ? 'selected' : ''}>35</option>
-                                    <option value="6" ${(param.taille != null && param.taille eq '6') ? 'selected' : ''}>36</option>
-                                    <option value="7" ${(param.taille != null && param.taille eq '7') ? 'selected' : ''}>37</option>
-                                    <option value="8" ${(param.taille != null && param.taille eq '8') ? 'selected' : ''}>38</option>
-                                    <option value="9" ${(param.taille != null && param.taille eq '9') ? 'selected' : ''}>39</option>
-                                    <option value="10" ${(param.taille != null && param.taille eq '10') ? 'selected' : ''}>40</option>
-                                    <option value="11" ${(param.taille != null && param.taille eq '11') ? 'selected' : ''}>41</option>
-                                    <option value="12" ${(param.taille != null && param.taille eq '12') ? 'selected' : ''}>42</option>
-                                    <option value="13" ${(param.taille != null && param.taille eq '13') ? 'selected' : ''}>43</option>
-                                    <option value="14" ${(param.taille != null && param.taille eq '14') ? 'selected' : ''}>44</option>
-                                </select>
+                                <input type="text" id="taille" name="taille" placeholder="Entrez la taille" value="<%= tailleParam %>">
                             </div>
 
                             <div class="filter-item">
                                 <label for="couleur">Couleur:</label>
                                 <select id="couleur" name="couleur">
                                     <option value="">Toutes les couleurs</option>
-                                    <option value="1" ${(param.couleur != null && param.couleur eq '1') ? 'selected' : ''}>Noir</option>
-                                    <option value="2" ${(param.couleur != null && param.couleur eq '2') ? 'selected' : ''}>Blanc</option>
-                                    <option value="3" ${(param.couleur != null && param.couleur eq '3') ? 'selected' : ''}>Rouge</option>
-                                    <option value="4" ${(param.couleur != null && param.couleur eq '4') ? 'selected' : ''}>Bleu</option>
-                                    <option value="5" ${(param.couleur != null && param.couleur eq '5') ? 'selected' : ''}>Vert</option>
-                                    <option value="6" ${(param.couleur != null && param.couleur eq '6') ? 'selected' : ''}>Jaune</option>
+                                    <%
+                                        java.util.List<String[]> couleurs = (java.util.List<String[]>) request.getAttribute("couleurs");
+                                        if(couleurs != null) {
+                                            for(String[] couleur : couleurs) {
+                                                String selected = couleurParam.equals(couleur[0]) ? "selected" : "";
+                                    %>
+                                                <option value="<%= couleur[0] %>" <%= selected %>><%= couleur[1] %></option>
+                                    <%
+                                            }
+                                        }
+                                    %>
                                 </select>
                             </div>
 
