@@ -107,7 +107,14 @@ public class ChaussureServlet extends HttpServlet {
 
         // Récupérer le panier de l'utilisateur
         int userId = 1; // Pour l'exemple, à remplacer par l'utilisateur réellement connecté
-        Panier panier = panierDao.getPanierByUserId(userId);
+
+        // Vérifier si l'utilisateur existe, sinon en créer un par défaut
+        int actualUserId = userId;
+        if (!panierDao.utilisateurExiste(userId)) {
+            actualUserId = panierDao.creerUtilisateurParDefaut("Utilisateur Temporaire");
+        }
+
+        Panier panier = panierDao.getPanierByUserId(actualUserId);
 
         // Récupérer les listes dynamiques pour les filtres
         request.setAttribute("marques", chaussureDao.getAllMarques());
@@ -125,14 +132,20 @@ public class ChaussureServlet extends HttpServlet {
                .forward(request, response);
     }
 
-    private void addToCart(HttpServletRequest request, HttpServletResponse response, int userId) 
+    private void addToCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws IOException {
         try {
             int chaussureId = Integer.parseInt(request.getParameter("chaussureId"));
             int quantity = Integer.parseInt(request.getParameter("quantity"));
-            
+
             boolean success = panierDao.addItemToCart(userId, chaussureId, quantity);
-            
+
+            if (!success) {
+                // Si l'ajout a échoué, rediriger avec un message d'erreur
+                response.sendRedirect(request.getContextPath() + "/chaussures?action=view&error=failedToAddToCart");
+                return;
+            }
+
             response.sendRedirect(request.getContextPath() + "/chaussures?action=view");
         } catch (NumberFormatException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Paramètres invalides");
