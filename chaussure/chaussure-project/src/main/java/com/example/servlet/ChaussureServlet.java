@@ -4,10 +4,12 @@ import com.example.dao.ChaussureDao;
 import com.example.dao.PanierDao;
 import com.example.model.Chaussure;
 import com.example.model.Panier;
+import com.example.model.Utilisateur;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
@@ -17,12 +19,20 @@ public class ChaussureServlet extends HttpServlet {
     private PanierDao panierDao = new PanierDao();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
-        int userId = 1; // Pour l'exemple, à remplacer par l'utilisateur réellement connecté
-        
+
+        // Récupérer l'utilisateur connecté depuis la session
+        int userId = getConnectedUserId(request, response);
+        if (userId == -1) {
+            // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+            request.getSession().setAttribute("redirectUrl", request.getRequestURI() + "?" + request.getQueryString());
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
         if (action != null) {
             switch (action) {
                 case "view":
@@ -47,6 +57,18 @@ public class ChaussureServlet extends HttpServlet {
             viewChaussures(request, response);
         }
     }
+
+    private int getConnectedUserId(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object utilisateurObj = session.getAttribute("utilisateur");
+            if (utilisateurObj instanceof com.example.model.Utilisateur) {
+                com.example.model.Utilisateur utilisateur = (com.example.model.Utilisateur) utilisateurObj;
+                return utilisateur.getId();
+            }
+        }
+        return -1;
+    }
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
@@ -56,6 +78,15 @@ public class ChaussureServlet extends HttpServlet {
 
     private void viewChaussures(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        // Récupérer l'utilisateur connecté
+        int userId = getConnectedUserId(request, response);
+        if (userId == -1) {
+            // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+            request.getSession().setAttribute("redirectUrl", request.getRequestURL().toString() + "?" + request.getQueryString());
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         // Récupérer les paramètres de filtrage
         String marqueStr = request.getParameter("marque");
@@ -105,16 +136,8 @@ public class ChaussureServlet extends HttpServlet {
             chaussures = chaussureDao.findAll();
         }
 
-        // Récupérer le panier de l'utilisateur
-        int userId = 1; // Pour l'exemple, à remplacer par l'utilisateur réellement connecté
-
-        // Vérifier si l'utilisateur existe, sinon en créer un par défaut
-        int actualUserId = userId;
-        if (!panierDao.utilisateurExiste(userId)) {
-            actualUserId = panierDao.creerUtilisateurParDefaut("Utilisateur Temporaire");
-        }
-
-        Panier panier = panierDao.getPanierByUserId(actualUserId);
+        // Récupérer le panier de l'utilisateur connecté
+        Panier panier = panierDao.getPanierByUserId(userId);
 
         // Récupérer les listes dynamiques pour les filtres
         request.setAttribute("marques", chaussureDao.getAllMarques());

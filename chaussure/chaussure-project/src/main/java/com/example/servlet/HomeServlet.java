@@ -1,9 +1,11 @@
 package com.example.servlet;
 
+import com.example.model.Utilisateur;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class HomeServlet extends HttpServlet {
@@ -15,7 +17,16 @@ public class HomeServlet extends HttpServlet {
         request.setAttribute("message", "Bienvenue sur Chaussure Shop ! Découvrez notre sélection exclusive de chaussures en vous rendant sur la page Vente Chaussures.");
         request.setAttribute("title", "Accueil");
         request.setAttribute("subtitle", "Page d'accueil");
-        
+
+        // Récupérer les informations de l'utilisateur connecté
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object utilisateurObj = session.getAttribute("utilisateur");
+            if (utilisateurObj instanceof com.example.model.Utilisateur) {
+                request.setAttribute("utilisateurConnecte", utilisateurObj);
+            }
+        }
+
         // Forward vers la page JSP
         request.getRequestDispatcher("/jsp/home.jsp")
                .forward(request, response);
