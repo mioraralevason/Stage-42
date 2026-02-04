@@ -1,3 +1,0 @@
-je commence un projet a propos de vente de chaussure 
-la technologie que j ai utilise cest java;servlet; et jsp et ce que j ai fait c est c etait une filtre et recherche et ajout au panier 
-Fonctionnalite
